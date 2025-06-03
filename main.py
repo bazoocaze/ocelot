@@ -2,7 +2,7 @@ import sys
 import requests
 
 def run_prompt_on_ollama(model_name, prompt):
-    api_url = f"https://api.ollama.com/v1/models/{model_name}/generate"
+    api_url = f"http://localhost:11434/v1/models/{model_name}/generate"
     payload = {
         "prompt": prompt,
     }
