@@ -1,19 +1,12 @@
+import sys
 import requests
 
 def run_prompt_on_ollama(model_name, prompt):
-    # Replace 'YOUR_API_URL' with the actual URL of the Ollama API endpoint
     api_url = f"https://api.ollama.com/v1/models/{model_name}/generate"
-
-    # Prepare the payload for the API request
     payload = {
         "prompt": prompt,
-        # Add any other required parameters as per the Ollama API documentation
     }
-
-    # Make a POST request to the Ollama API
     response = requests.post(api_url, json=payload)
-
-    # Check if the request was successful
     if response.status_code == 200:
         result = response.json()
         print("Result from Ollama API:")
@@ -23,9 +16,12 @@ def run_prompt_on_ollama(model_name, prompt):
         print(response.text)
 
 def main():
-    model_name = input("Enter the model name: ")
-    prompt = input("Enter the prompt: ")
-
+    if len(sys.argv) != 3:
+        print("Usage: python3 main.py <model name> <text prompt>")
+        sys.exit(1)
+    
+    model_name = sys.argv[1]
+    prompt = sys.argv[2]
     run_prompt_on_ollama(model_name, prompt)
 
 if __name__ == "__main__":
