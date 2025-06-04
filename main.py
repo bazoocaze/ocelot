@@ -1,7 +1,8 @@
 import sys
+import argparse
 import requests
 
-def run_prompt_on_ollama(model_name, prompt):
+def run_prompt_on_ollama(model_name, prompt, debug=False):
     api_url = "http://localhost:11434/api/generate"
     payload = {
         "model": model_name,
@@ -18,13 +19,18 @@ def run_prompt_on_ollama(model_name, prompt):
         sys.exit(1)
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python3 main.py <model name> <text prompt>")
-        sys.exit(1)
-    
-    model_name = sys.argv[1]
-    prompt = sys.argv[2]
-    run_prompt_on_ollama(model_name, prompt)
+    parser = argparse.ArgumentParser(description="Run a prompt on an Ollama model.")
+    parser.add_argument("model_name", help="Name of the Ollama model to use.")
+    parser.add_argument("prompt", help="The text prompt to send to the model.")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode (for future use).")
+
+    args = parser.parse_args()
+
+    model_name = args.model_name
+    prompt = args.prompt
+    debug = args.debug
+
+    run_prompt_on_ollama(model_name, prompt, debug)
 
 if __name__ == "__main__":
     main()
