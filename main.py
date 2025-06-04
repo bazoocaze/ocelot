@@ -2,7 +2,7 @@ import sys
 import argparse
 import requests
 
-def run_prompt_on_ollama(model_name, prompt, debug=False):
+def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
     api_url = "http://localhost:11434/api/generate"
     payload = {
         "model": model_name,
@@ -26,14 +26,16 @@ def main():
     parser.add_argument("model_name", help="Name of the Ollama model to use.")
     parser.add_argument("prompt", help="The text prompt to send to the model.")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode (for future use).")
+    parser.add_argument("--hide-think", action="store_true", help="Hide thinking process (for future use).")
 
     args = parser.parse_args()
 
     model_name = args.model_name
     prompt = args.prompt
     debug = args.debug
+    hide_think = args.hide_think
 
-    run_prompt_on_ollama(model_name, prompt, debug)
+    run_prompt_on_ollama(model_name, prompt, debug, hide_think)
 
 if __name__ == "__main__":
     main()
