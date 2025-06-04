@@ -16,7 +16,7 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
         print("Result from Ollama API:")
         if hide_think:
             # Remove <think>...</think> tags from the response
-            processed_response = re.sub(r'<think>.*?</think>', '', result["response"])
+            processed_response = re.sub(r'<think>.*</think>', '', result["response"])
             print(processed_response)
         else:
             print(result["response"])
