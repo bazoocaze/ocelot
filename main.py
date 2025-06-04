@@ -19,7 +19,7 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
         if hide_think:
             # Remove think...eol tags from the response
             # Use re.DOTALL to match across newlines
-            processed_response = re.sub(r'think.*?eol\s+', '', result["response"], flags=re.DOTALL)
+            processed_response = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', result["response"], flags=re.DOTALL)
             print(processed_response)
         else:
             print(result["response"])
