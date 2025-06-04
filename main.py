@@ -7,6 +7,7 @@ def run_prompt_on_ollama(model_name, prompt, debug=False):
     payload = {
         "model": model_name,
         "prompt": prompt,
+        "stream": False  # Disable streaming support
     }
     response = requests.post(api_url, json=payload)
     if response.status_code == 200:
