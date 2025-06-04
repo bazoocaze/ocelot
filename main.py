@@ -14,6 +14,7 @@ def run_prompt_on_ollama(model_name, prompt):
     else:
         print(f"Error: {response.status_code}")
         print(response.text)
+        sys.exit(1)
 
 def main():
     if len(sys.argv) != 3:
