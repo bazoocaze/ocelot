@@ -11,7 +11,6 @@ def run_prompt_on_ollama(model_name, prompt, debug=False):
     }
     response = requests.post(api_url, json=payload)
     if response.status_code == 200:
-        print(response.text)
         result = response.json()
         print("Result from Ollama API:")
         print(result)
