@@ -1,6 +1,7 @@
 import sys
 import argparse
 import requests
+import re
 
 def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
     api_url = "http://localhost:11434/api/generate"
@@ -13,7 +14,12 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
     if response.status_code == 200:
         result = response.json()
         print("Result from Ollama API:")
-        print(result["response"])
+        if hide_think:
+            # Remove <think>...</think> tags from the response
+            processed_response = re.sub(r'<think>.*?</think>', '', result["response"])
+            print(processed_response)
+        else:
+            print(result["response"])
     else:
         print(f"Error: {response.status_code}")
         if debug:
