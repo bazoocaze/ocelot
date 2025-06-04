@@ -13,7 +13,7 @@ def run_prompt_on_ollama(model_name, prompt, debug=False):
     if response.status_code == 200:
         result = response.json()
         print("Result from Ollama API:")
-        print(result)
+        print(result["response"])
     else:
         print(f"Error: {response.status_code}")
         if debug:
