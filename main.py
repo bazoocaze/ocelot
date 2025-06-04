@@ -15,7 +15,9 @@ def run_prompt_on_ollama(model_name, prompt, debug=False):
         print(result)
     else:
         print(f"Error: {response.status_code}")
-        print(response.text)
+        if debug:
+            print("Response body:")
+            print(response.text)
         sys.exit(1)
 
 def main():
