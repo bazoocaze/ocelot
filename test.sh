@@ -1,4 +1,4 @@
 #!/bin/bash -x
 
-./run.sh "qwen2.5-coder:1.5b" "Hello"
+./run.sh --hide-think "qwen3:14b" "Hello"
 
