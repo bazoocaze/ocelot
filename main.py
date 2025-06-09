@@ -24,7 +24,7 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
         if debug:
             console.print(f"DEBUG: Response body:", style="red")
             console.print(f"DEBUG: {response.text}", style="red")
-        sys.exit(1)
+        return 1
 
     if debug:
         console.print(f"DEBUG: Stream started", style="red")
@@ -43,6 +43,8 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
                     to_output = re.sub(r"</think>", "\\</think\\>", to_output)
                 live.update(Markdown(to_output, style="bright_blue"))
 
+    return 0
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an Ollama model.")
@@ -58,8 +60,8 @@ def main():
     debug = args.debug
     hide_think = args.hide_think
 
-    run_prompt_on_ollama(model_name, prompt, debug, hide_think)
+    return run_prompt_on_ollama(model_name, prompt, debug, hide_think)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
