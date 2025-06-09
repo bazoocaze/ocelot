@@ -1,4 +1,4 @@
 #!/bin/bash -x
 
-./run.sh --debug --hide-think "qwen3:14b" "Hello"
+./run.sh --hide-think "qwen3:8b" "Who wrote Harry Potter?"
 

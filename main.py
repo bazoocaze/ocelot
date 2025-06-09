@@ -19,13 +19,12 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
         if debug:
             console.print(f"DEBUG: {response.text}", style="red")
         result = response.json()
+        output_text=result["response"]
         if hide_think:
-            # Remove think...eol tags from the response
-            # Use re.DOTALL to match across newlines
-            processed_response = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', result["response"], flags=re.DOTALL)
-            console.print(Markdown(processed_response), style="green")
-        else:
-            console.print(Markdown(result["response"]), style="green")
+            # Remove think tags from the response
+            output_text = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', output_text, flags=re.DOTALL)
+        console.print(output_text) # temporary for markdown debugging
+        console.print(Markdown(output_text), style="bright_blue")
     else:
         console.print(f"Error: {response.status_code}", style="red")
         if debug:
