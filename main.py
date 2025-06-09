@@ -12,19 +12,24 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
     payload = {
         "model": model_name,
         "prompt": prompt,
-        "stream": False  # Disable streaming support
+        "stream": True  # Enable streaming support
     }
-    response = requests.post(api_url, json=payload)
+    response = requests.post(api_url, json=payload, stream=True)
     if response.status_code == 200:
         if debug:
-            console.print(f"DEBUG: {response.text}", style="red")
-        result = response.json()
-        output_text=result["response"]
-        if hide_think:
-            # Remove think tags from the response
-            output_text = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', output_text, flags=re.DOTALL)
-        console.print(output_text) # temporary for markdown debugging
-        console.print(Markdown(output_text), style="bright_blue")
+            console.print(f"DEBUG: Stream started", style="red")
+        output_text = ""
+        for line in response.iter_lines(decode_unicode=True):
+            if line:
+                if debug:
+                    console.print(f"DEBUG: {line}", style="red")
+                result = eval(line)  # Assuming the response is a valid Python dictionary
+                output_text += result["response"]
+                if hide_think:
+                    # Remove think tags from the response
+                    output_text = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', output_text, flags=re.DOTALL)
+                console.print(Markdown(output_text), style="bright_blue", end="")
+        console.print()  # Newline after the stream ends
     else:
         console.print(f"Error: {response.status_code}", style="red")
         if debug:
