@@ -15,7 +15,6 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
         if debug:
             print(f"DEBUG: {response.text}")
         result = response.json()
-        print("Result from Ollama API:")
         if hide_think:
             # Remove think...eol tags from the response
             # Use re.DOTALL to match across newlines
