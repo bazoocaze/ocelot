@@ -3,6 +3,7 @@ import argparse
 import requests
 import re
 from rich.console import Console
+from rich.markdown import Markdown
 
 console = Console()
 
