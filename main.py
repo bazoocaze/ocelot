@@ -16,20 +16,20 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
     response = requests.post(api_url, json=payload)
     if response.status_code == 200:
         if debug:
-            console.print(f"DEBUG: {response.text}", style="bold red")
+            console.print(f"DEBUG: {response.text}", style="red")
         result = response.json()
         if hide_think:
             # Remove think...eol tags from the response
             # Use re.DOTALL to match across newlines
             processed_response = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', result["response"], flags=re.DOTALL)
-            console.print(processed_response, style="bold green")
+            console.print(Markdown(processed_response), style="green")
         else:
-            console.print(result["response"], style="bold green")
+            console.print(Markdown(result["response"]), style="green")
     else:
-        console.print(f"Error: {response.status_code}", style="bold red")
+        console.print(f"Error: {response.status_code}", style="red")
         if debug:
-            console.print(f"DEBUG: Response body:", style="bold red")
-            console.print(f"DEBUG: {response.text}", style="bold red")
+            console.print(f"DEBUG: Response body:", style="red")
+            console.print(f"DEBUG: {response.text}", style="red")
         sys.exit(1)
 
 def main():
