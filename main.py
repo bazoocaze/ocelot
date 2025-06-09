@@ -1,11 +1,15 @@
-import sys
 import argparse
-import requests
+import json
 import re
+import sys
+
+import requests
 from rich.console import Console
+from rich.live import Live
 from rich.markdown import Markdown
 
 console = Console()
+
 
 def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
     api_url = "http://localhost:11434/api/generate"
@@ -15,27 +19,30 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
         "stream": True  # Enable streaming support
     }
     response = requests.post(api_url, json=payload, stream=True)
-    if response.status_code == 200:
-        if debug:
-            console.print(f"DEBUG: Stream started", style="red")
-        output_text = ""
-        for line in response.iter_lines(decode_unicode=True):
-            if line:
-                if debug:
-                    console.print(f"DEBUG: {line}", style="red")
-                result = eval(line)  # Assuming the response is a valid Python dictionary
-                output_text += result["response"]
-                if hide_think:
-                    # Remove think tags from the response
-                    output_text = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', output_text, flags=re.DOTALL)
-                console.print(Markdown(output_text), style="bright_blue", end="")
-        console.print()  # Newline after the stream ends
-    else:
+    if response.status_code != 200:
         console.print(f"Error: {response.status_code}", style="red")
         if debug:
             console.print(f"DEBUG: Response body:", style="red")
             console.print(f"DEBUG: {response.text}", style="red")
         sys.exit(1)
+
+    if debug:
+        console.print(f"DEBUG: Stream started", style="red")
+    output_text = ""
+    with Live(Markdown(output_text), console=console, refresh_per_second=10) as live:
+        for line in response.iter_lines(decode_unicode=True):
+            if line:
+                if debug:
+                    console.print(f"DEBUG: {line}", style="red")
+                result = json.loads(line)  # Assuming the response is a valid Python dictionary
+                output_text += result["response"]
+                if hide_think:
+                    to_output = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', output_text, flags=re.DOTALL)
+                else:
+                    to_output = re.sub(r"<think>", "\\<think\\>", output_text)
+                    to_output = re.sub(r"</think>", "\\</think\\>", to_output)
+                live.update(Markdown(to_output, style="bright_blue"))
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an Ollama model.")
@@ -52,6 +59,7 @@ def main():
     hide_think = args.hide_think
 
     run_prompt_on_ollama(model_name, prompt, debug, hide_think)
+
 
 if __name__ == "__main__":
     main()
