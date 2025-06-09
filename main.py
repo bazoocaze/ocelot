@@ -2,6 +2,9 @@ import sys
 import argparse
 import requests
 import re
+from rich.console import Console
+
+console = Console()
 
 def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
     api_url = "http://localhost:11434/api/generate"
@@ -13,20 +16,20 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
     response = requests.post(api_url, json=payload)
     if response.status_code == 200:
         if debug:
-            print(f"DEBUG: {response.text}")
+            console.print(f"DEBUG: {response.text}", style="bold red")
         result = response.json()
         if hide_think:
             # Remove think...eol tags from the response
             # Use re.DOTALL to match across newlines
             processed_response = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', result["response"], flags=re.DOTALL)
-            print(processed_response)
+            console.print(processed_response, style="bold green")
         else:
-            print(result["response"])
+            console.print(result["response"], style="bold green")
     else:
-        print(f"Error: {response.status_code}")
+        console.print(f"Error: {response.status_code}", style="bold red")
         if debug:
-            print(f"DEBUG: Response body:")
-            print(f"DEBUG: {response.text}")
+            console.print(f"DEBUG: Response body:", style="bold red")
+            console.print(f"DEBUG: {response.text}", style="bold red")
         sys.exit(1)
 
 def main():
