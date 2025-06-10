@@ -1,6 +1,5 @@
 import argparse
 import json
-import re
 import sys
 
 import requests
@@ -36,11 +35,7 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
                     console.print(f"DEBUG: {line}", style="red")
                 result = json.loads(line)  # Assuming the response is a valid Python dictionary
                 output_text += result["response"]
-                if hide_think:
-                    to_output = re.sub('<' + 'think' + '>.*</' + 'think' + r'>\s+', '', output_text, flags=re.DOTALL)
-                else:
-                    to_output = re.sub(r"<think>", "\\<think\\>", output_text)
-                    to_output = re.sub(r"</think>", "\\</think\\>", to_output)
+                to_output = output_text.replace("<think>", "\\<think\\>").replace("</think>", "\\</think>")
                 live.update(Markdown(to_output, style="bright_blue"))
 
     return 0
