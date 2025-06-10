@@ -35,7 +35,24 @@ def run_prompt_on_ollama(model_name, prompt, debug=False, hide_think=False):
                     console.print(f"DEBUG: {line}", style="red")
                 result = json.loads(line)  # Assuming the response is a valid Python dictionary
                 output_text += result["response"]
-                to_output = output_text.replace("<think>", "\\<think\\>").replace("</think>", "\\</think>")
+
+                if hide_think:
+                    if "<think>" in output_text:
+                        if "</think>" in output_text:
+                            # Remove think tags and their content
+                            start = output_text.find("<think>")
+                            end = output_text.find("</think>") + len("</think>")
+                            to_output = output_text[:start] + output_text[end:]
+                        else:
+                            to_output = ""
+                    else:
+                        to_output = output_text
+                else:
+                    # Escape think tags if not hiding
+                    to_output = output_text.replace(
+                        "<think>", "\\<think\\>").replace(
+                        "</think>", "\\</think\\>")
+
                 live.update(Markdown(to_output, style="bright_blue"))
 
     return 0
