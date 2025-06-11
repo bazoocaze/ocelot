@@ -1,6 +1,5 @@
-# bllm
+# Ocelot
 
-bllm application allow to call llm models.
+Ocelot: get up and running with large language models.
 
-Usage: `python3 main.py <model name> <text prompt>`
-
+Usage: `python3 ocelot.py <model name> <text prompt>`
