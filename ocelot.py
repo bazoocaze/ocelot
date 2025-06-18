@@ -101,13 +101,13 @@ def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
 
-    # Run command
-    run_parser = subparsers.add_parser('run', help='Run a prompt')
-    run_parser.add_argument("model_name",
-                            help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
-    run_parser.add_argument("prompt", help="The text prompt to send to the model.")
-    run_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
-    run_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
+    # Generate command
+    generate_parser = subparsers.add_parser('generate', help='Generate text from a prompt')
+    generate_parser.add_argument("model_name",
+                                 help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
+    generate_parser.add_argument("prompt", help="The text prompt to send to the model.")
+    generate_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
+    generate_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
 
     # Interactive chat command
     chat_parser = subparsers.add_parser('chat', help='Interactive chat with the model')
@@ -122,7 +122,7 @@ def main():
         parser.print_help()
         return 1
 
-    if args.command == 'run':
+    if args.command == 'generate':
         return run_command(args)
     elif args.command == 'chat':
         return interactive_chat(args)
