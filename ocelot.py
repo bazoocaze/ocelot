@@ -12,7 +12,8 @@ from rich.markdown import Markdown
 
 console = Console()
 from src.model_output import ModelOutput  # Updated import path
-from src.openrouter_backend import OpenRouterBackend, BaseLLMBackend  # Updated import path
+from src.base_llm_backend import BaseLLMBackend  # Updated import path
+from src.openrouter_backend import OpenRouterBackend  # Updated import path
 from src.ollama_backend import OllamaBackend  # Updated import path
 
 class ChatSession:

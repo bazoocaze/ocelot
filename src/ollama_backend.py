@@ -4,7 +4,7 @@ import requests
 from rich.console import Console
 
 console = Console()
-from src.openrouter_backend import BaseLLMBackend  # Added import for BaseLLMBackend
+from src.base_llm_backend import BaseLLMBackend  # Updated import path
 
 class OllamaResponse:
     def __init__(self, line, debug=False):

@@ -4,13 +4,7 @@ import requests
 from rich.console import Console
 
 console = Console()
-
-class BaseLLMBackend:
-    def generate(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
-        raise NotImplementedError
-
-    def chat(self, messages: List[Dict[str, str]], stream: bool = False) -> Union[str, Generator[str, None, None]]:
-        raise NotImplementedError
+from src.base_llm_backend import BaseLLMBackend  # Updated import path
 
 class OpenRouterResponse:
     def __init__(self, line, debug=False):
