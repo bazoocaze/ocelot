@@ -11,7 +11,7 @@ from rich.live import Live
 from rich.markdown import Markdown
 
 console = Console()
-
+from model_output import ModelOutput
 
 class BaseLLMBackend:
     def generate(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
@@ -19,7 +19,6 @@ class BaseLLMBackend:
 
     def chat(self, messages: List[Dict[str, str]], stream: bool = False) -> Union[str, Generator[str, None, None]]:
         raise NotImplementedError
-
 
 class OpenRouterResponse:
     def __init__(self, line, debug=False):
@@ -61,7 +60,6 @@ class OpenRouterResponse:
     @property
     def is_content(self) -> bool:
         return bool(self.content)
-
 
 class OpenRouterBackend(BaseLLMBackend):
     def __init__(self, api_key: str, model: str, debug: bool = False, show_reasoning: bool = True):
@@ -150,7 +148,6 @@ class OpenRouterBackend(BaseLLMBackend):
             if self._debug:
                 console.print(f"DEBUG: Unknown response: {response.line}", style="bold red")
 
-
 class OllamaResponse:
     def __init__(self, line, debug=False):
         self.valid = True
@@ -176,7 +173,6 @@ class OllamaResponse:
     @property
     def is_content(self) -> bool:
         return bool(self.content)
-
 
 class OllamaBackend(BaseLLMBackend):
     def __init__(self, model: str, base_url: str = "http://localhost:11434", debug: bool = False):
@@ -226,7 +222,6 @@ class OllamaBackend(BaseLLMBackend):
                 data = json.loads(line)
                 yield data.get("message", {}).get("content", "")
 
-
 class ChatSession:
     def __init__(self, backend: BaseLLMBackend, system_prompt: Optional[str] = None):
         self.backend = backend
@@ -259,39 +254,6 @@ class ChatSession:
 
         return streaming_response()
 
-
-class ModelOutput:
-    def __init__(self, show_reasoning: bool = True):
-        self._buffer = ""
-        self._reasoning = False
-        self._show_reasoning = show_reasoning
-        self._content = ""
-
-    def add_token(self, token: str):
-        self._buffer += token
-        if not self._show_reasoning:
-            if "<think>" in self._buffer:
-                if "</think>" in self._buffer:
-                    # Remove think tags and their content
-                    start = self._buffer.find("<think>")
-                    end = self._buffer.find("</think>") + len("</think>")
-                    self._buffer = self._buffer[:start] + self._buffer[end:]
-                    self._reasoning = False
-                else:
-                    self._reasoning = True
-            self._content = self._buffer
-        else:
-            # Escape think tags if not hiding
-            self._content = self._buffer.replace(
-                "<think>", "\\<think\\>").replace(
-                "</think>", "\\</think\\>")
-
-    def content(self):
-        if self._reasoning and not self._show_reasoning:
-            return ""
-        return self._content
-
-
 def generate_on_backend(ollama, prompt, show_reasoning, debug=False):
     output = ModelOutput(show_reasoning=show_reasoning)
     if debug:
@@ -307,7 +269,6 @@ def generate_on_backend(ollama, prompt, show_reasoning, debug=False):
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
     return 0
-
 
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
@@ -347,7 +308,6 @@ def main():
         if debug:
             print_exc()
         return 1
-
 
 if __name__ == "__main__":
     sys.exit(main())
