@@ -70,6 +70,7 @@ def interactive_chat(args):
     model_name = args.model_name
     debug = args.debug
     show_reasoning = not args.no_show_reasoning
+    initial_prompt = args.initial_prompt
 
     try:
         backend = resolve_backend(model_name, debug=debug, show_reasoning=show_reasoning)
@@ -78,6 +79,9 @@ def interactive_chat(args):
         return 1
 
     chat_session = ChatSession(backend)
+
+    if initial_prompt:
+        chat_session.add_system(initial_prompt)
 
     console.print("Interactive chat started. Type 'exit' to quit.", style="bold green")
 
@@ -128,6 +132,7 @@ def main():
                              help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
     chat_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
     chat_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
+    chat_parser.add_argument("--initial-prompt", type=str, help="Initial prompt to send to the model.")
 
     args = parser.parse_args()
 
