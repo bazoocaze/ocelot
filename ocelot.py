@@ -17,10 +17,24 @@ from src.openrouter_backend import OpenRouterBackend  # Updated import path
 from src.ollama_backend import OllamaBackend  # Updated import path
 from src.chat_session import ChatSession  # New import
 
-def generate_on_backend(ollama, prompt, show_reasoning, debug=False):
+def resolve_backend(model_name: str, debug: bool = False, show_reasoning: bool = True) -> BaseLLMBackend:
+    if model_name.startswith("openrouter/"):
+        model_name = model_name[len("openrouter/"):]
+        openrouter_api_key = environ.get("OPENROUTER_API_KEY")
+        if not openrouter_api_key:
+            console.print("ERROR: OPENROUTER_API_KEY environment variable is not set", style="bold red")
+            raise ValueError("OPENROUTER_API_KEY environment variable is not set")
+        return OpenRouterBackend(openrouter_api_key, model=model_name, debug=debug, show_reasoning=show_reasoning)
+    else:
+        # Default to Ollama backend
+        if model_name.startswith("ollama/"):
+            model_name = model_name[len("ollama/"):]
+        return OllamaBackend(model_name, debug=debug)
+
+def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False) -> int:
     output = ModelOutput(show_reasoning=show_reasoning)
     if debug:
-        for token in ollama.generate(prompt, stream=True):
+        for token in backend.generate(prompt, stream=True):
             output.add_token(token)
             print(f"[{token}]", end="", flush=True)
         print("\n--- CONTENT ---")
@@ -28,7 +42,7 @@ def generate_on_backend(ollama, prompt, show_reasoning, debug=False):
         print("---")
     else:
         with Live(Markdown(output.content()), console=console, refresh_per_second=10) as live:
-            for token in ollama.generate(prompt, stream=True):
+            for token in backend.generate(prompt, stream=True):
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
     return 0
@@ -39,20 +53,8 @@ def run_command(args):
     debug = args.debug
     show_reasoning = not args.no_show_reasoning
 
-    if model_name.startswith("openrouter/"):
-        model_name = model_name[len("openrouter/"):]
-        openrouter_api_key = environ.get("OPENROUTER_API_KEY")
-        if not openrouter_api_key:
-            console.print("ERROR: OPENROUTER_API_KEY environment variable is not set", style="bold red")
-            return 1
-        backend = OpenRouterBackend(openrouter_api_key, model=model_name, debug=debug, show_reasoning=show_reasoning)
-    else:
-        # Default to Ollama backend
-        if model_name.startswith("ollama/"):
-            model_name = model_name[len("ollama/"):]
-        backend = OllamaBackend(model_name, debug=debug)
-
     try:
+        backend = resolve_backend(model_name, debug=debug, show_reasoning=show_reasoning)
         return generate_on_backend(backend, prompt, show_reasoning, debug=debug)
     except KeyboardInterrupt:
         console.print("Keyboard interrupt detected. Exiting...", style="bold red")
@@ -68,18 +70,11 @@ def interactive_chat(args):
     debug = args.debug
     show_reasoning = not args.no_show_reasoning
 
-    if model_name.startswith("openrouter/"):
-        model_name = model_name[len("openrouter/"):]
-        openrouter_api_key = environ.get("OPENROUTER_API_KEY")
-        if not openrouter_api_key:
-            console.print("ERROR: OPENROUTER_API_KEY environment variable is not set", style="bold red")
-            return 1
-        backend = OpenRouterBackend(openrouter_api_key, model=model_name, debug=debug, show_reasoning=show_reasoning)
-    else:
-        # Default to Ollama backend
-        if model_name.startswith("ollama/"):
-            model_name = model_name[len("ollama/"):]
-        backend = OllamaBackend(model_name, debug=debug)
+    try:
+        backend = resolve_backend(model_name, debug=debug, show_reasoning=show_reasoning)
+    except ValueError as e:
+        console.print(str(e), style="bold red")
+        return 1
 
     chat_session = ChatSession(backend)
 
