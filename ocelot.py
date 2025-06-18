@@ -108,12 +108,15 @@ def interactive_chat(args):
             command_history.append(user_input)
             history_index = len(command_history)
 
-            response = chat_session.ask(user_input, stream=False)
+            response = chat_session.ask(user_input, stream=True)
 
             console.print(f"Assistant: ", style="bright_blue", end="")
             output_tokens(response, show_reasoning, debug=debug)
 
-    except KeyboardInterrupt:
+    except EOFError:
+        console.print("")
+        pass
+    except KeyboardInterrupt | EOFError:
         console.print("\nKeyboard interrupt detected. Exiting...", style="bold red")
         return 1
     except Exception as e:
