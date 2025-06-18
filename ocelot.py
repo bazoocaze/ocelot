@@ -270,17 +270,8 @@ def generate_on_backend(ollama, prompt, show_reasoning, debug=False):
                 live.update(Markdown(output.content(), style="bright_blue"))
     return 0
 
-def main():
-    parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
-    parser.add_argument("model_name",
-                        help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
-    parser.add_argument("prompt", help="The text prompt to send to the model.")
-    parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
-    parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
-
-    args = parser.parse_args()
-
-    model_name: str = args.model_name
+def run_command(args):
+    model_name = args.model_name
     prompt = args.prompt
     debug = args.debug
     show_reasoning = not args.no_show_reasoning
@@ -308,6 +299,27 @@ def main():
         if debug:
             print_exc()
         return 1
+
+def main():
+    parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
+    subparsers = parser.add_subparsers(dest='command', help='Subcommands')
+
+    # Run command
+    run_parser = subparsers.add_parser('run', help='Run a prompt')
+    run_parser.add_argument("model_name",
+                            help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
+    run_parser.add_argument("prompt", help="The text prompt to send to the model.")
+    run_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
+    run_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        return 1
+
+    if args.command == 'run':
+        return run_command(args)
 
 if __name__ == "__main__":
     sys.exit(main())
