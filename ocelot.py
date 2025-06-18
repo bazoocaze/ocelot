@@ -1,12 +1,9 @@
 import argparse
-import json
+import readline  # Add this import at the top
 import sys
 from os import environ
 from traceback import print_exc
-from typing import List, Dict, Optional, Union, Generator
 
-import readline  # Add this import at the top
-import requests
 from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
@@ -17,6 +14,7 @@ from src.base_llm_backend import BaseLLMBackend  # Updated import path
 from src.openrouter_backend import OpenRouterBackend  # Updated import path
 from src.ollama_backend import OllamaBackend  # Updated import path
 from src.chat_session import ChatSession  # New import
+
 
 def resolve_backend(model_name: str, debug: bool = False, show_reasoning: bool = True) -> BaseLLMBackend:
     if model_name.startswith("openrouter/"):
@@ -32,10 +30,11 @@ def resolve_backend(model_name: str, debug: bool = False, show_reasoning: bool =
             model_name = model_name[len("ollama/"):]
         return OllamaBackend(model_name, debug=debug)
 
-def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False) -> int:
+
+def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
     if debug:
-        for token in backend.generate(prompt, stream=True):
+        for token in tokens:
             output.add_token(token)
             print(f"[{token}]", end="", flush=True)
         print("\n--- CONTENT ---")
@@ -43,10 +42,16 @@ def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bo
         print("---")
     else:
         with Live(Markdown(output.content()), console=console, refresh_per_second=10) as live:
-            for token in backend.generate(prompt, stream=True):
+            for token in tokens:
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
+
+
+def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False) -> int:
+    tokens = backend.generate(prompt, stream=True)
+    output_tokens(tokens, show_reasoning, debug=debug)
     return 0
+
 
 def run_generate(args):
     model_name = args.model_name
@@ -66,6 +71,7 @@ def run_generate(args):
             print_exc()
         return 1
 
+
 def interactive_chat(args):
     model_name = args.model_name
     debug = args.debug
@@ -80,10 +86,6 @@ def interactive_chat(args):
 
     chat_session = ChatSession(backend)
 
-    if initial_prompt:
-        response = chat_session.ask(initial_prompt, stream=False)
-        console.print(f"Assistant: {response}", style="bright_blue")
-
     console.print("Interactive chat started. Type 'exit' to quit.", style="bold green")
 
     command_history = []
@@ -92,18 +94,25 @@ def interactive_chat(args):
 
     try:
         while True:
-            user_input = input("You: ")
-            if user_input.lower() == "exit":
-                break
+            if initial_prompt:
+                console.print(f"You: {initial_prompt}\n", end="")
+                user_input = initial_prompt
+                readline.add_history(initial_prompt)
+                initial_prompt = None
+            else:
+                user_input = input("You: ")
+                if user_input.lower() == "exit":
+                    break
 
             # Add the current input to the history
             command_history.append(user_input)
             history_index = len(command_history)
 
-            chat_session.add_user(user_input)
             response = chat_session.ask(user_input, stream=False)
 
-            console.print(f"Assistant: {response}", style="bright_blue")
+            console.print(f"Assistant: ", style="bright_blue", end="")
+            output_tokens(response, show_reasoning, debug=debug)
+
     except KeyboardInterrupt:
         console.print("\nKeyboard interrupt detected. Exiting...", style="bold red")
         return 1
@@ -114,6 +123,7 @@ def interactive_chat(args):
         return 1
 
     return 0
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
@@ -145,6 +155,7 @@ def main():
         return run_generate(args)
     elif args.command == 'chat':
         return interactive_chat(args)
+
 
 if __name__ == "__main__":
     sys.exit(main())
