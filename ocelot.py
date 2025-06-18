@@ -63,6 +63,40 @@ def run_command(args):
             print_exc()
         return 1
 
+def interactive_chat(args):
+    model_name = args.model_name
+    debug = args.debug
+    show_reasoning = not args.no_show_reasoning
+
+    if model_name.startswith("openrouter/"):
+        model_name = model_name[len("openrouter/"):]
+        openrouter_api_key = environ.get("OPENROUTER_API_KEY")
+        if not openrouter_api_key:
+            console.print("ERROR: OPENROUTER_API_KEY environment variable is not set", style="bold red")
+            return 1
+        backend = OpenRouterBackend(openrouter_api_key, model=model_name, debug=debug, show_reasoning=show_reasoning)
+    else:
+        # Default to Ollama backend
+        if model_name.startswith("ollama/"):
+            model_name = model_name[len("ollama/"):]
+        backend = OllamaBackend(model_name, debug=debug)
+
+    chat_session = ChatSession(backend)
+
+    console.print("Interactive chat started. Type 'exit' to quit.", style="bold green")
+
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() == "exit":
+            break
+
+        chat_session.add_user(user_input)
+        response = chat_session.ask(user_input, stream=False)
+
+        console.print(f"Assistant: {response}", style="bright_blue")
+
+    return 0
+
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
@@ -75,6 +109,13 @@ def main():
     run_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
     run_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
 
+    # Interactive chat command
+    chat_parser = subparsers.add_parser('chat', help='Interactive chat with the model')
+    chat_parser.add_argument("model_name",
+                             help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
+    chat_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
+    chat_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -83,6 +124,8 @@ def main():
 
     if args.command == 'run':
         return run_command(args)
+    elif args.command == 'chat':
+        return interactive_chat(args)
 
 if __name__ == "__main__":
     sys.exit(main())
