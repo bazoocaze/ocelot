@@ -80,15 +80,24 @@ def interactive_chat(args):
 
     console.print("Interactive chat started. Type 'exit' to quit.", style="bold green")
 
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() == "exit":
-            break
+    try:
+        while True:
+            user_input = input("You: ")
+            if user_input.lower() == "exit":
+                break
 
-        chat_session.add_user(user_input)
-        response = chat_session.ask(user_input, stream=False)
+            chat_session.add_user(user_input)
+            response = chat_session.ask(user_input, stream=False)
 
-        console.print(f"Assistant: {response}", style="bright_blue")
+            console.print(f"Assistant: {response}", style="bright_blue")
+    except KeyboardInterrupt:
+        console.print("\nKeyboard interrupt detected. Exiting...", style="bold red")
+        return 1
+    except Exception as e:
+        console.print(f"ERROR: {e}", style="bold red")
+        if debug:
+            print_exc()
+        return 1
 
     return 0
 
