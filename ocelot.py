@@ -82,6 +82,7 @@ def interactive_chat(args):
 
     command_history = []
     history_index = 0
+    readline.set_startup_hook(lambda: readline.insert_text(command_history[history_index]))  # Initialize readline
 
     try:
         while True:
