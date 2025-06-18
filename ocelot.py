@@ -81,7 +81,8 @@ def interactive_chat(args):
     chat_session = ChatSession(backend)
 
     if initial_prompt:
-        chat_session.add_system(initial_prompt)
+        response = chat_session.ask(initial_prompt, stream=False)
+        console.print(f"Assistant: {response}", style="bright_blue")
 
     console.print("Interactive chat started. Type 'exit' to quit.", style="bold green")
 
