@@ -80,11 +80,18 @@ def interactive_chat(args):
 
     console.print("Interactive chat started. Type 'exit' to quit.", style="bold green")
 
+    command_history = []
+    history_index = 0
+
     try:
         while True:
             user_input = input("You: ")
             if user_input.lower() == "exit":
                 break
+
+            # Add the current input to the history
+            command_history.append(user_input)
+            history_index = len(command_history)
 
             chat_session.add_user(user_input)
             response = chat_session.ask(user_input, stream=False)
