@@ -47,7 +47,7 @@ def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bo
                 live.update(Markdown(output.content(), style="bright_blue"))
     return 0
 
-def run_command(args):
+def run_generate(args):
     model_name = args.model_name
     prompt = args.prompt
     debug = args.debug
@@ -118,7 +118,7 @@ def main():
         return 1
 
     if args.command == 'generate':
-        return run_command(args)
+        return run_generate(args)
     elif args.command == 'chat':
         return interactive_chat(args)
 
