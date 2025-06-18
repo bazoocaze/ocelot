@@ -11,7 +11,7 @@ from rich.live import Live
 from rich.markdown import Markdown
 
 console = Console()
-from model_output import ModelOutput
+from src.model_output import ModelOutput  # Updated import path
 
 class BaseLLMBackend:
     def generate(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
