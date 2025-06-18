@@ -5,6 +5,7 @@ from os import environ
 from traceback import print_exc
 from typing import List, Dict, Optional, Union, Generator
 
+import readline  # Add this import at the top
 import requests
 from rich.console import Console
 from rich.live import Live
