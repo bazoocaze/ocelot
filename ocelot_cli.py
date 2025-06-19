@@ -126,6 +126,8 @@ def list_models(args):
 
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
+
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
 
     # Generate command
@@ -134,7 +136,6 @@ def main():
                                  required=True,
                                  help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
     generate_parser.add_argument("prompt", help="The text prompt to send to the model.")
-    generate_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
     generate_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
 
     # Interactive chat command
@@ -142,7 +143,6 @@ def main():
     chat_parser.add_argument("-m", "--model_name",
                              required=True,
                              help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
-    chat_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
     chat_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
     chat_parser.add_argument("--initial-prompt", type=str, help="Initial prompt to send to the model.")
 
@@ -151,7 +151,7 @@ def main():
     list_models_parser.add_argument("-m", "--model_name",
                                     required=True,
                                     help="Name of the backend to use. Format: [backend]. Supported backends: ollama, openrouter")
-    list_models_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
+    list_models_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
 
     args = parser.parse_args()
 
