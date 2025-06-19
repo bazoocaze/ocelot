@@ -67,12 +67,13 @@ class OllamaBackend(BaseLLMBackend):
         return self._stream_chat_response(response)
 
     def list_models(self) -> List[str]:
-        url = f"{self._base_url}/api/models"
+        url = f"{self._base_url}/api/tags"
         try:
             response = requests.get(url)
             if not response.ok:
                 raise RuntimeError(f"Request error: {response.status_code} - {response.text}")
-            return response.json().get("models", [])
+            data = response.json()
+            return [m.get("name") for m in data.get("models", [])]
         except Exception as e:
             console.print(f"ERROR: Failed to fetch models: {e}", style="bold red")
             return []
