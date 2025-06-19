@@ -15,7 +15,6 @@ from src.openrouter_backend import OpenRouterBackend  # Updated import path
 from src.ollama_backend import OllamaBackend  # Updated import path
 from src.chat_session import ChatSession  # New import
 
-
 def resolve_backend(model_name: str, debug: bool = False, show_reasoning: bool = True) -> BaseLLMBackend:
     if model_name.startswith("openrouter/"):
         model_name = model_name[len("openrouter/"):]
@@ -29,7 +28,6 @@ def resolve_backend(model_name: str, debug: bool = False, show_reasoning: bool =
         if model_name.startswith("ollama/"):
             model_name = model_name[len("ollama/"):]
         return OllamaBackend(model_name, debug=debug)
-
 
 def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
@@ -46,12 +44,10 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
 
-
 def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False) -> int:
     tokens = backend.generate(prompt, stream=True)
     output_tokens(tokens, show_reasoning, debug=debug)
     return 0
-
 
 def run_generate(args):
     model_name = args.model_name
@@ -70,7 +66,6 @@ def run_generate(args):
         if debug:
             print_exc()
         return 1
-
 
 def interactive_chat(args):
     model_name = args.model_name
@@ -127,14 +122,14 @@ def interactive_chat(args):
 
     return 0
 
-
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
 
     # Generate command
     generate_parser = subparsers.add_parser('generate', help='Generate text from a prompt')
-    generate_parser.add_argument("model_name",
+    generate_parser.add_argument("-m", "--model_name",
+                                 required=True,
                                  help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
     generate_parser.add_argument("prompt", help="The text prompt to send to the model.")
     generate_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
@@ -142,7 +137,8 @@ def main():
 
     # Interactive chat command
     chat_parser = subparsers.add_parser('chat', help='Interactive chat with the model')
-    chat_parser.add_argument("model_name",
+    chat_parser.add_argument("-m", "--model_name",
+                             required=True,
                              help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
     chat_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
     chat_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
@@ -158,7 +154,6 @@ def main():
         return run_generate(args)
     elif args.command == 'chat':
         return interactive_chat(args)
-
 
 if __name__ == "__main__":
     sys.exit(main())
