@@ -13,7 +13,6 @@ from src.base_llm_backend import BaseLLMBackend
 from src.chat_session import ChatSession
 from src.backend_resolver import resolve_backend
 
-
 def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
     if debug:
@@ -29,12 +28,10 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
 
-
 def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False) -> int:
     tokens = backend.generate(prompt, stream=True)
     output_tokens(tokens, show_reasoning, debug=debug)
     return 0
-
 
 def run_generate(args):
     model_name = args.model_name
@@ -53,7 +50,6 @@ def run_generate(args):
         if debug:
             print_exc()
         return 1
-
 
 def interactive_chat(args):
     model_name = args.model_name
@@ -110,6 +106,23 @@ def interactive_chat(args):
 
     return 0
 
+def list_models(args):
+    model_name = args.model_name
+    debug = args.debug
+
+    try:
+        backend = resolve_backend(model_name, debug=debug)
+        models = backend.list_models()
+        console.print("Available models:", style="bold green")
+        for model in models:
+            console.print(f"- {model}")
+    except Exception as e:
+        console.print(f"ERROR: {e}", style="bold red")
+        if debug:
+            print_exc()
+        return 1
+
+    return 0
 
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
@@ -133,6 +146,13 @@ def main():
     chat_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
     chat_parser.add_argument("--initial-prompt", type=str, help="Initial prompt to send to the model.")
 
+    # List models command
+    list_models_parser = subparsers.add_parser('list-models', help='List available models')
+    list_models_parser.add_argument("-m", "--model_name",
+                                    required=True,
+                                    help="Name of the backend to use. Format: [backend]. Supported backends: ollama, openrouter")
+    list_models_parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -143,11 +163,12 @@ def main():
         return run_generate(args)
     elif args.command == 'chat':
         return interactive_chat(args)
+    elif args.command == 'list-models':
+        return list_models(args)
 
     console.print("Invalid command.", style="bold red")
 
     return 1
-
 
 if __name__ == "__main__":
     sys.exit(main())
