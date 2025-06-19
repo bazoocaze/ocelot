@@ -7,7 +7,6 @@ from rich.console import Console
 console = Console()
 from src.base_llm_backend import BaseLLMBackend  # Updated import path
 
-
 class OllamaResponse:
     def __init__(self, line, debug=False):
         self.valid = True
@@ -33,7 +32,6 @@ class OllamaResponse:
     @property
     def is_content(self) -> bool:
         return bool(self.content)
-
 
 class OllamaBackend(BaseLLMBackend):
     def __init__(self, model: str, base_url: str = "http://localhost:11434", debug: bool = False):
@@ -67,6 +65,14 @@ class OllamaBackend(BaseLLMBackend):
         if not response.ok:
             raise RuntimeError(f"Request error: {response.status_code} - {response.text}")
         return self._stream_chat_response(response)
+
+    def list_models(self) -> List[str]:
+        url = f"{self._base_url}/api/models"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json().get("models", [])
+        else:
+            raise Exception(f"Failed to fetch models: {response.text}")
 
     def _stream_generate_response(self, response: requests.Response) -> Generator[str, None, None]:
         for line in response.iter_lines():
