@@ -1,10 +1,12 @@
-from typing import List, Dict, Union, Generator
 import json
+from typing import List, Dict, Union, Generator
+
 import requests
 from rich.console import Console
 
 console = Console()
 from src.base_llm_backend import BaseLLMBackend  # Updated import path
+
 
 class OpenRouterResponse:
     def __init__(self, line, debug=False):
@@ -47,6 +49,7 @@ class OpenRouterResponse:
     def is_content(self) -> bool:
         return bool(self.content)
 
+
 class OpenRouterBackend(BaseLLMBackend):
     def __init__(self, api_key: str, model: str, debug: bool = False, show_reasoning: bool = True):
         self._api_key = api_key
@@ -88,7 +91,7 @@ class OpenRouterBackend(BaseLLMBackend):
         url = f"{self._base_url}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self._api_key}",
-            "HTTP-Referer": "https://github.com/yourusername/ocelot",  # Replace with your actual repo
+            "HTTP-Referer": "https://github.com/bazoocaze/ocelot",
             "X-Title": "Ocelot CLI"
         }
 

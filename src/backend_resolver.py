@@ -2,11 +2,12 @@ from os import environ
 
 from rich.console import Console
 
-from src.base_llm_backend import BaseLLMBackend  # Updated import path
-from src.openrouter_backend import OpenRouterBackend  # Updated import path
-from src.ollama_backend import OllamaBackend  # Updated import path
+from src.base_llm_backend import BaseLLMBackend
+from src.ollama_backend import OllamaBackend
+from src.openrouter_backend import OpenRouterBackend
 
 console = Console()
+
 
 def resolve_backend(model_name: str, debug: bool = False, show_reasoning: bool = True) -> BaseLLMBackend:
     if model_name.startswith("openrouter/"):

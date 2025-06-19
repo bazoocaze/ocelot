@@ -2,6 +2,7 @@ from typing import List, Dict, Optional, Union, Generator
 
 from src.base_llm_backend import BaseLLMBackend  # Updated import path
 
+
 class ChatSession:
     def __init__(self, backend: BaseLLMBackend, system_prompt: Optional[str] = None):
         self.backend = backend

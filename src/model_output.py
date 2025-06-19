@@ -1,5 +1,3 @@
-from typing import Optional
-
 class ModelOutput:
     def __init__(self, show_reasoning: bool = True):
         self._buffer = ""

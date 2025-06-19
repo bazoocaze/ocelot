@@ -1,10 +1,12 @@
-from typing import List, Dict, Union, Generator
 import json
+from typing import List, Dict, Union, Generator
+
 import requests
 from rich.console import Console
 
 console = Console()
 from src.base_llm_backend import BaseLLMBackend  # Updated import path
+
 
 class OllamaResponse:
     def __init__(self, line, debug=False):
@@ -31,6 +33,7 @@ class OllamaResponse:
     @property
     def is_content(self) -> bool:
         return bool(self.content)
+
 
 class OllamaBackend(BaseLLMBackend):
     def __init__(self, model: str, base_url: str = "http://localhost:11434", debug: bool = False):

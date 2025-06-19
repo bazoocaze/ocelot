@@ -1,5 +1,5 @@
 import argparse
-import readline  # Add this import at the top
+import readline
 import sys
 from traceback import print_exc
 
@@ -8,12 +8,11 @@ from rich.live import Live
 from rich.markdown import Markdown
 
 console = Console()
-from src.model_output import ModelOutput  # Updated import path
-from src.base_llm_backend import BaseLLMBackend  # Updated import path
-from src.openrouter_backend import OpenRouterBackend  # Updated import path
-from src.ollama_backend import OllamaBackend  # Updated import path
-from src.chat_session import ChatSession  # New import
-from src.backend_resolver import resolve_backend  # New import
+from src.model_output import ModelOutput
+from src.base_llm_backend import BaseLLMBackend
+from src.chat_session import ChatSession
+from src.backend_resolver import resolve_backend
+
 
 def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
@@ -30,10 +29,12 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
 
+
 def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False) -> int:
     tokens = backend.generate(prompt, stream=True)
     output_tokens(tokens, show_reasoning, debug=debug)
     return 0
+
 
 def run_generate(args):
     model_name = args.model_name
@@ -52,6 +53,7 @@ def run_generate(args):
         if debug:
             print_exc()
         return 1
+
 
 def interactive_chat(args):
     model_name = args.model_name
@@ -108,6 +110,7 @@ def interactive_chat(args):
 
     return 0
 
+
 def main():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
@@ -140,6 +143,11 @@ def main():
         return run_generate(args)
     elif args.command == 'chat':
         return interactive_chat(args)
+
+    console.print("Invalid command.", style="bold red")
+
+    return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())
