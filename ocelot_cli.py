@@ -109,13 +109,19 @@ def interactive_chat(args):
 def list_models(args):
     model_name = args.model_name
     debug = args.debug
+    plain = args.plain
 
     try:
         backend = resolve_backend(model_name, debug=debug)
         models = backend.list_models()
-        console.print("Available models:", style="bold green")
-        for model in models:
-            console.print(f"- {model}")
+
+        if plain:
+            for model in models:
+                print(model)
+        else:
+            console.print("Available models:", style="bold green")
+            for model in models:
+                console.print(f"- {model}")
     except Exception as e:
         console.print(f"ERROR: {e}", style="bold red")
         if debug:
@@ -152,6 +158,7 @@ def main():
                                     required=True,
                                     help="Name of the backend to use. Format: [backend]. Supported backends: ollama, openrouter")
     list_models_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
+    list_models_parser.add_argument("--plain", action="store_true", help="List models in plain text without formatting.")
 
     args = parser.parse_args()
 
