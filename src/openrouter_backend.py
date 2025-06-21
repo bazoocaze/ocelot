@@ -51,12 +51,14 @@ class OpenRouterResponse:
 
 
 class OpenRouterBackend(BaseLLMBackend):
-    def __init__(self, api_key: str, model: str, debug: bool = False, show_reasoning: bool = True):
+    def __init__(self, api_key: str, model_name: str, debug: bool = False, show_reasoning: bool = True,
+                 base_url: str = "https://openrouter.ai/api/v1", extra_headers: dict = None):
         self._api_key = api_key
-        self._model = model
-        self._base_url = "https://openrouter.ai/api/v1"
+        self._model_name = model_name
+        self._base_url = base_url
         self._debug = debug
         self._show_reasoning = show_reasoning
+        self._extra_headers = extra_headers or {}
 
     def generate(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
         url = f"{self._base_url}/chat/completions"
@@ -69,7 +71,7 @@ class OpenRouterBackend(BaseLLMBackend):
         messages = [{"role": "user", "content": prompt}]
 
         payload = {
-            "model": self._model,
+            "model": self._model_name,
             "messages": messages,
             "stream": stream
         }
@@ -96,7 +98,7 @@ class OpenRouterBackend(BaseLLMBackend):
         }
 
         payload = {
-            "model": self._model,
+            "model": self._model_name,
             "messages": messages,
             "stream": stream
         }

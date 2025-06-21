@@ -7,6 +7,7 @@ from rich.console import Console
 console = Console()
 from src.base_llm_backend import BaseLLMBackend  # Updated import path
 
+
 class OllamaResponse:
     def __init__(self, line, debug=False):
         self.valid = True
@@ -33,16 +34,19 @@ class OllamaResponse:
     def is_content(self) -> bool:
         return bool(self.content)
 
+
 class OllamaBackend(BaseLLMBackend):
-    def __init__(self, model: str, base_url: str = "http://localhost:11434", debug: bool = False):
-        self._model = model
+    def __init__(self, model_name: str, base_url: str = "http://localhost:11434", debug: bool = False,
+                 show_reasoning: bool = False):
+        self._model_name = model_name
         self._base_url = base_url.rstrip("/")
         self._debug = debug
+        self._show_reasoning = show_reasoning  # unused
 
     def generate(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
         url = f"{self._base_url}/api/generate"
         payload = {
-            "model": self._model,
+            "model": self._model_name,
             "prompt": prompt,
             "stream": stream
         }
@@ -57,7 +61,7 @@ class OllamaBackend(BaseLLMBackend):
     def chat(self, messages: List[Dict[str, str]], stream: bool = False) -> Union[str, Generator[str, None, None]]:
         url = f"{self._base_url}/api/chat"
         payload = {
-            "model": self._model,
+            "model": self._model_name,
             "messages": messages,
             "stream": stream
         }
