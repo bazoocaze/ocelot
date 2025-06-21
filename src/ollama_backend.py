@@ -84,13 +84,13 @@ class OllamaBackend(BaseLLMBackend):
             return []
 
     def get_running_models(self) -> List[str]:
-        url = f"{self._base_url}/api/running"
+        url = f"{self._base_url}/api/ps"
         try:
             response = requests.get(url)
             if not response.ok:
                 raise RuntimeError(f"Request error: {response.status_code} - {response.text}")
             data = response.json()
-            return [m.get("name") for m in data.get("models", [])]
+            return ["ollama/" + m.get("name") for m in data.get("models", [])]
         except Exception as e:
             console.print(f"ERROR: Failed to fetch running models: {e}", style="bold red")
             return []

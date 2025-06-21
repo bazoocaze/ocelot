@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 # Import the main function from ocelot_cli.py
 from ocelot_cli import run_app, ConfigLoader
+from src.ollama_backend import OllamaBackend
+from src.provider_factory import ProviderFactory
 
 
 class TestIntegration(unittest.TestCase):
@@ -11,6 +13,8 @@ class TestIntegration(unittest.TestCase):
     def setUp(self):
         self.config_loader = ConfigLoader()
         self.config = self.config_loader.load_config()
+        self.provider_factory = ProviderFactory(config=self.config)
+        self.ollama_backend: OllamaBackend = self.provider_factory.resolve_backend('ollama', debug=True)
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_list_models_command_ollama(self, mock_stdout):
@@ -31,12 +35,11 @@ class TestIntegration(unittest.TestCase):
         output = mock_stdout.getvalue()
         self.assertIn("ollama/", output)
 
-        # Extract the first available model from ollama
-        lines = output.split('\n')
-        for line in lines:
-            if "ollama/" in line:
-                model_name = line.strip()
-                break
+        available_models = [line.strip() for line in output.split('\n') if "ollama/" in line]
+
+        model_name = self._get_running_ollama_model()
+        if not model_name:
+            model_name = available_models[0]
 
         mock_stdout = self._reset_stream(mock_stdout)
 
@@ -46,6 +49,13 @@ class TestIntegration(unittest.TestCase):
         # Capture the output and check if it contains expected content
         output = mock_stdout.getvalue()
         self.assertIn("150", output)  # Check for assistant response
+
+    def _get_running_ollama_model(self):
+        running = self.ollama_backend.get_running_models()
+        if running:
+            return running[0]
+        else:
+            return None
 
     @staticmethod
     def _reset_stream(mock_stdout):
