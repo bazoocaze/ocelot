@@ -110,6 +110,20 @@ class OpenAiCompatibleApiBackend(BaseLLMBackend):
             data = response.json()
             return data["choices"][0]["message"]["content"]
 
+    def list_models(self) -> List[str]:
+        url = f"{self._base_url}/models"
+        headers = self._extra_headers.copy()
+
+        response = requests.get(url, headers=headers)
+        if not response.ok:
+            if self._debug:
+                debug_text = response.text.splitlines()[0]
+                console.print(f"DEBUG: status={response.status_code}, text={debug_text}", style="bold")
+            raise RuntimeError(f"Request error: {response.status_code} - {response.text}")
+
+        data = response.json()
+        return [model["id"] for model in data["data"]]
+
     def _stream_response(self, response: requests.Response) -> Generator[str, None, None]:
         reasoning = False
         for line in response.iter_lines():
