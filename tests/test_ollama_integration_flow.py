@@ -43,10 +43,12 @@ class TestOllamaIntegrationFlow(unittest.TestCase):
         # Run a real model name to use
         model_name = self._get_ollama_model_to_use()
 
-        # Run the generate command with a real model name
-        # run_application(self.config_loader, ['--plain', 'chat', '-m', model_name])
+        # Run the chat command with a real model name
+        run_application(self.config_loader, ['--plain', 'chat', '-m', model_name, '--initial-prompt', 'Hello'])
 
-        # Missing rest of test
+        # Capture the output and check if it contains expected content
+        output = mock_stdout.getvalue()
+        self.assertIn("Assistant: ", output)  # Check for assistant response
 
     def _get_ollama_model_to_use(self):
         running = self.ollama_backend.get_running_models()
