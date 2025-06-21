@@ -15,10 +15,9 @@ from src.model_output import ModelOutput
 from src.base_llm_backend import BaseLLMBackend
 from src.chat_session import ChatSession
 
-
-def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
+def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain_output: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
-    if debug:
+    if debug or plain_output:
         for token in tokens:
             output.add_token(token)
             print(f"[{token}]", end="", flush=True)
@@ -31,12 +30,10 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
 
-
-def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False) -> int:
+def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False, plain_output: bool = False) -> int:
     tokens = backend.generate(prompt, stream=True)
-    output_tokens(tokens, show_reasoning, debug=debug)
+    output_tokens(tokens, show_reasoning, debug=debug, plain_output=plain_output)
     return 0
-
 
 def run_generate(config, args):
     provider_factory = ProviderFactory(config)
@@ -44,11 +41,12 @@ def run_generate(config, args):
     prompt = args.prompt
     debug = args.debug
     show_reasoning = not args.no_show_reasoning
+    plain_output = args.plain_output
 
     try:
         backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
                                                    show_reasoning=show_reasoning)
-        return generate_on_backend(backend, prompt, show_reasoning, debug=debug)
+        return generate_on_backend(backend, prompt, show_reasoning, debug=debug, plain_output=plain_output)
     except KeyboardInterrupt:
         console.print("Keyboard interrupt detected. Exiting...", style="bold red")
         return 1
@@ -58,12 +56,12 @@ def run_generate(config, args):
             print_exc()
         return 1
 
-
 def interactive_chat(config, args):
     provider_factory = ProviderFactory(config)
     provider_name, model_name = provider_factory.resolve_provider_for_model_name(args.model_name)
     debug = args.debug
     show_reasoning = not args.no_show_reasoning
+    plain_output = args.plain_output
     initial_prompt = args.initial_prompt
 
     try:
@@ -100,7 +98,7 @@ def interactive_chat(config, args):
             response = chat_session.ask(user_input, stream=True)
 
             console.print(f"Assistant: ", style="bright_blue", end="")
-            output_tokens(response, show_reasoning, debug=debug)
+            output_tokens(response, show_reasoning, debug=debug, plain_output=plain_output)
 
     except EOFError:
         console.print("")
@@ -115,7 +113,6 @@ def interactive_chat(config, args):
         return 1
 
     return 0
-
 
 def list_models(config, args):
     provider_factory = ProviderFactory(config)
@@ -146,10 +143,10 @@ def list_models(config, args):
 
     return 0
 
-
 def parse_args(input_args):
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
+    parser.add_argument("--plain-output", action="store_true", help="Show output without formatting, similar to debug mode.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
     # Generate command
     generate_parser = subparsers.add_parser('generate', help='Generate text from a prompt')
@@ -179,7 +176,6 @@ def parse_args(input_args):
 
     return args
 
-
 def run_app(config_loader: ConfigLoader, input_args):
     args = parse_args(input_args)
 
@@ -199,11 +195,9 @@ def run_app(config_loader: ConfigLoader, input_args):
 
     return 1
 
-
 def main():
     config_loader = ConfigLoader()
     return run_app(config_loader, sys.argv[1:] if len(sys.argv) > 1 else None)
-
 
 if __name__ == "__main__":
     sys.exit(main())
