@@ -83,6 +83,18 @@ class OllamaBackend(BaseLLMBackend):
             console.print(f"ERROR: Failed to fetch models: {e}", style="bold red")
             return []
 
+    def get_running_models(self) -> List[str]:
+        url = f"{self._base_url}/api/running"
+        try:
+            response = requests.get(url)
+            if not response.ok:
+                raise RuntimeError(f"Request error: {response.status_code} - {response.text}")
+            data = response.json()
+            return [m.get("name") for m in data.get("models", [])]
+        except Exception as e:
+            console.print(f"ERROR: Failed to fetch running models: {e}", style="bold red")
+            return []
+
     def _stream_generate_response(self, response: requests.Response) -> Generator[str, None, None]:
         for line in response.iter_lines():
             response = OllamaResponse(line, self._debug)
