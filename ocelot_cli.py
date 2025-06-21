@@ -119,7 +119,7 @@ def interactive_chat(config, args):
 
 def list_models(config, args):
     provider_factory = ProviderFactory(config)
-    provider_name = args.provider_name
+    provider_name = args.provider_name or 'all'
     debug = args.debug
     plain = args.plain
 
@@ -168,7 +168,7 @@ def parse_args():
     # List models command
     list_models_parser = subparsers.add_parser('list-models', help='List available models')
     list_models_parser.add_argument("-p", "--provider_name",
-                                    required=True,
+                                    default='all',
                                     help="Name of the backend to use. Format: [backend]. Supported backends: ollama, openrouter, all")
     list_models_parser.add_argument("--plain", action="store_true",
                                     help="List models in plain text without formatting.")
