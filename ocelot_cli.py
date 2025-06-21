@@ -147,7 +147,7 @@ def list_models(config, args):
     return 0
 
 
-def parse_args():
+def parse_args(input_args):
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
@@ -172,7 +172,7 @@ def parse_args():
                                     help="Name of the backend to use. Supported backends: ollama, openrouter, all, others(config).")
     list_models_parser.add_argument("--plain", action="store_true",
                                     help="List models in plain text without formatting.")
-    args = parser.parse_args()
+    args = parser.parse_args(input_args)
 
     if not args.command:
         parser.print_help()
@@ -180,8 +180,8 @@ def parse_args():
     return args
 
 
-def run_app(config_loader: ConfigLoader):
-    args = parse_args()
+def run_app(config_loader: ConfigLoader, input_args):
+    args = parse_args(input_args)
 
     if not args.command:
         return 1
@@ -202,7 +202,7 @@ def run_app(config_loader: ConfigLoader):
 
 def main():
     config_loader = ConfigLoader()
-    return run_app(config_loader)
+    return run_app(config_loader, sys.argv[1:] if len(sys.argv) > 1 else None)
 
 
 if __name__ == "__main__":

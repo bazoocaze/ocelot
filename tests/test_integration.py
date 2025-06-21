@@ -1,10 +1,10 @@
 import unittest
-from unittest.mock import patch, MagicMock
-import sys
 from io import StringIO
+from unittest.mock import patch
 
 # Import the main function from ocelot_cli.py
 from ocelot_cli import run_app, ConfigLoader
+
 
 class TestIntegration(unittest.TestCase):
 
@@ -25,11 +25,11 @@ class TestIntegration(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_generate_command_ollama(self, mock_stdout):
         # Run the list-models command to get available models
-        run_app(self.config_loader, ['list-models'])
+        run_app(self.config_loader, ['list-models', '--plain'])
 
         # Capture the output and extract a real model name
         output = mock_stdout.getvalue()
-        self.assertIn("Available models:", output)
+        self.assertIn("ollama/", output)
 
         # Extract the first available model from ollama
         lines = output.split('\n')
@@ -38,12 +38,22 @@ class TestIntegration(unittest.TestCase):
                 model_name = line.strip()
                 break
 
+        mock_stdout = self._reset_stream(mock_stdout)
+
         # Run the generate command with a real model name
-        run_app(self.config_loader, ['generate', '-m', model_name, 'Hello, world!'])
+        run_app(self.config_loader, ['generate', '-m', model_name, 'How much is 75 + 75?'])
 
         # Capture the output and check if it contains expected content
         output = mock_stdout.getvalue()
-        self.assertIn("Assistant:", output)  # Check for assistant response
+        self.assertIn("150", output)  # Check for assistant response
+
+    @staticmethod
+    def _reset_stream(mock_stdout):
+        mock_stdout: StringIO
+        mock_stdout.truncate(0)
+        mock_stdout.seek(0)
+        return mock_stdout
+
 
 if __name__ == '__main__':
     unittest.main()
