@@ -19,6 +19,7 @@ class OllamaResponse:
     def _process_line(self, line):
         if not line:
             self.valid = False
+            return
 
         data = json.loads(line)
         content = data.get("response", "")

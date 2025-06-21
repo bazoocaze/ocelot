@@ -3,3 +3,4 @@
 .env
 .venv_path
 __pycache__
+/.coverage
