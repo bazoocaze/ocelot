@@ -13,7 +13,7 @@ class TestIntegration(unittest.TestCase):
         self.config = self.config_loader.load_config()
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_list_models_command(self, mock_stdout):
+    def test_list_models_command_ollama(self, mock_stdout):
         # Run the list-models command
         run_app(self.config_loader, ['list-models'])
 
@@ -23,7 +23,7 @@ class TestIntegration(unittest.TestCase):
         self.assertIn("ollama/", output)  # Check for at least one model from ollama
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_generate_command(self, mock_stdout):
+    def test_generate_command_ollama(self, mock_stdout):
         # Run the list-models command to get available models
         run_app(self.config_loader, ['list-models'])
 
