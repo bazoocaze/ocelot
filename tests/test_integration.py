@@ -25,7 +25,7 @@ class TestIntegration(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_generate_command_ollama(self, mock_stdout):
         # Run the list-models command to get available models
-        run_app(self.config_loader, ['list-models', '--plain'])
+        run_app(self.config_loader, ['--plain', 'list-models'])
 
         # Capture the output and extract a real model name
         output = mock_stdout.getvalue()
@@ -41,7 +41,7 @@ class TestIntegration(unittest.TestCase):
         mock_stdout = self._reset_stream(mock_stdout)
 
         # Run the generate command with a real model name
-        run_app(self.config_loader, ['generate', '-m', model_name, 'How much is 75 + 75?'])
+        run_app(self.config_loader, ['--plain', 'generate', '-m', model_name, 'How much is 75 + 75?'])
 
         # Capture the output and check if it contains expected content
         output = mock_stdout.getvalue()
