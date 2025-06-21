@@ -12,7 +12,6 @@ from src.provider_factory import ProviderFactory
 
 console = Console()
 from src.model_output import ModelOutput
-from src.base_llm_backend import BaseLLMBackend
 from src.chat_session import ChatSession
 
 
@@ -36,49 +35,32 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool
                 live.update(Markdown(output.content(), style="bright_blue"))
 
 
-def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False,
-                        plain: bool = False) -> int:
-    tokens = backend.generate(prompt, stream=True)
-    output_tokens(tokens, show_reasoning, debug=debug, plain=plain)
-    return 0
-
-
-def run_generate(config, args):
+def command_generate(config, args):
     provider_factory = ProviderFactory(config)
-    provider_name, model_name = provider_factory.resolve_provider_for_model_name(args.model_name)
+    provider_name, model_name = provider_factory.parse_model_name(args.model_name)
     prompt = args.prompt
     debug = args.debug
     show_reasoning = not args.no_show_reasoning
     plain = args.plain
 
-    try:
-        backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
-                                                   show_reasoning=show_reasoning)
-        return generate_on_backend(backend, prompt, show_reasoning, debug=debug, plain=plain)
-    except KeyboardInterrupt:
-        console.print("Keyboard interrupt detected. Exiting...", style="bold red")
-        return 1
-    except Exception as e:
-        console.print(f"ERROR: {e}", style="bold red")
-        if debug:
-            print_exc()
-        return 1
+    backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
+                                               show_reasoning=show_reasoning)
+
+    tokens = backend.generate(prompt, stream=True)
+    output_tokens(tokens, show_reasoning, debug=debug, plain=plain)
+    return 0
 
 
-def interactive_chat(config, args):
+def command_chat(config, args):
     provider_factory = ProviderFactory(config)
-    provider_name, model_name = provider_factory.resolve_provider_for_model_name(args.model_name)
+    provider_name, model_name = provider_factory.parse_model_name(args.model_name)
     debug = args.debug
     show_reasoning = not args.no_show_reasoning
     plain = args.plain
     initial_prompt = args.initial_prompt
 
-    try:
-        backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
-                                                   show_reasoning=show_reasoning)
-    except ValueError as e:
-        console.print(str(e), style="bold red")
-        return 1
+    backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
+                                               show_reasoning=show_reasoning)
 
     chat_session = ChatSession(backend)
 
@@ -88,68 +70,49 @@ def interactive_chat(config, args):
     history_index = 0
     readline.set_startup_hook(lambda: readline.insert_text(command_history[history_index]))  # Initialize readline
 
-    try:
-        while True:
-            if initial_prompt:
-                console.print(f"You: {initial_prompt}\n", end="")
-                user_input = initial_prompt
-                readline.add_history(initial_prompt)
-                initial_prompt = None
-            else:
-                user_input = input("You: ")
-                if user_input.lower() == "exit":
-                    break
+    while True:
+        if initial_prompt:
+            console.print(f"You: {initial_prompt}\n", end="")
+            user_input = initial_prompt
+            readline.add_history(initial_prompt)
+            initial_prompt = None
+        else:
+            user_input = input("You: ")
+            if user_input.lower() == "exit":
+                break
 
-            # Add the current input to the history
-            command_history.append(user_input)
-            history_index = len(command_history)
+        # Add the current input to the history
+        command_history.append(user_input)
+        history_index = len(command_history)
 
-            response = chat_session.ask(user_input, stream=True)
+        response = chat_session.ask(user_input, stream=True)
 
-            console.print(f"Assistant: ", style="bright_blue", end="")
-            output_tokens(response, show_reasoning, debug=debug, plain=plain)
-
-    except EOFError:
-        console.print("")
-        pass
-    except KeyboardInterrupt | EOFError:
-        console.print("\nKeyboard interrupt detected. Exiting...", style="bold red")
-        return 1
-    except Exception as e:
-        console.print(f"ERROR: {e}", style="bold red")
-        if debug:
-            print_exc()
-        return 1
+        console.print(f"Assistant: ", style="bright_blue", end="")
+        output_tokens(response, show_reasoning, debug=debug, plain=plain)
 
     return 0
 
 
-def list_models(config, args):
+def command_list_models(config, args):
     provider_factory = ProviderFactory(config)
     provider_name = args.provider_name or 'all'
     debug = args.debug
     plain = args.plain
 
-    try:
-        models = []
-        providers = provider_factory.all_providers() if provider_name == 'all' else [provider_name]
-        for provider in providers:
-            backend = provider_factory.resolve_backend(provider_name=provider, debug=debug)
-            provider_models = backend.list_models()
-            models.extend([f"{provider}/{model}" for model in provider_models])
+    models = []
+    providers = provider_factory.all_providers() if provider_name == 'all' else [provider_name]
+    for provider in providers:
+        backend = provider_factory.resolve_backend(provider_name=provider, debug=debug)
+        provider_models = backend.list_models()
+        models.extend([f"{provider}/{model}" for model in provider_models])
 
-        if plain:
-            for model in models:
-                print(model)
-        else:
-            console.print("Available models:", style="bold green")
-            for model in models:
-                console.print(f"- {model}")
-    except Exception as e:
-        console.print(f"ERROR: {e}", style="bold red")
-        if debug:
-            print_exc()
-        return 1
+    if plain:
+        for model in models:
+            print(model)
+    else:
+        console.print("Available models:", style="bold green")
+        for model in models:
+            console.print(f"- {model}")
 
     return 0
 
@@ -186,29 +149,40 @@ def parse_args(input_args):
     return args
 
 
-def run_app(config_loader: ConfigLoader, input_args):
+def run_application(config_loader: ConfigLoader, input_args):
     args = parse_args(input_args)
 
     if not args.command:
         return 1
 
-    config = config_loader.load_config()
+    try:
+        config = config_loader.load_config()
 
-    if args.command == 'generate':
-        return run_generate(config, args)
-    elif args.command == 'chat':
-        return interactive_chat(config, args)
-    elif args.command == 'list-models':
-        return list_models(config, args)
+        if args.command == 'generate':
+            return command_generate(config, args)
+        elif args.command == 'chat':
+            return command_chat(config, args)
+        elif args.command == 'list-models':
+            return command_list_models(config, args)
 
-    console.print("Invalid command.", style="bold red")
+        console.print("Invalid command.", style="bold red")
+
+    except EOFError:
+        console.print("")
+        return 0
+    except KeyboardInterrupt:
+        console.print("Keyboard interrupt detected. Exiting...", style="bold red")
+    except Exception as e:
+        console.print(f"ERROR: {e}", style="bold red")
+        if args.debug:
+            print_exc()
 
     return 1
 
 
 def main():
     config_loader = ConfigLoader()
-    return run_app(config_loader, sys.argv[1:] if len(sys.argv) > 1 else None)
+    return run_application(config_loader, sys.argv[1:] if len(sys.argv) > 1 else None)
 
 
 if __name__ == "__main__":

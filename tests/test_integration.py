@@ -3,7 +3,7 @@ from io import StringIO
 from unittest.mock import patch
 
 # Import the main function from ocelot_cli.py
-from ocelot_cli import run_app, ConfigLoader
+from ocelot_cli import run_application, ConfigLoader
 from src.ollama_backend import OllamaBackend
 from src.provider_factory import ProviderFactory
 
@@ -19,7 +19,7 @@ class TestIntegration(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_list_models_command_ollama(self, mock_stdout):
         # Run the list-models command
-        run_app(self.config_loader, ['list-models'])
+        run_application(self.config_loader, ['list-models'])
 
         # Capture the output and check if it contains expected models
         output = mock_stdout.getvalue()
@@ -29,7 +29,7 @@ class TestIntegration(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_generate_command_ollama(self, mock_stdout):
         # Run the list-models command to get available models
-        run_app(self.config_loader, ['--plain', 'list-models'])
+        run_application(self.config_loader, ['--plain', 'list-models'])
 
         # Capture the output and extract a real model name
         output = mock_stdout.getvalue()
@@ -44,7 +44,7 @@ class TestIntegration(unittest.TestCase):
         mock_stdout = self._reset_stream(mock_stdout)
 
         # Run the generate command with a real model name
-        run_app(self.config_loader, ['--plain', 'generate', '-m', model_name, 'How much is 75 + 75?'])
+        run_application(self.config_loader, ['--plain', 'generate', '-m', model_name, 'How much is 75 + 75?'])
 
         # Capture the output and check if it contains expected content
         output = mock_stdout.getvalue()

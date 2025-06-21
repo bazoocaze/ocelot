@@ -20,7 +20,7 @@ class ProviderFactory:
     def __init__(self, config: dict):
         self._providers = config["providers"]
 
-    def resolve_provider_for_model_name(self, model_name: str):
+    def parse_model_name(self, model_name: str):
         if "/" not in model_name:
             if len(self._providers.keys()) == 1:
                 return self._providers.keys()[0], model_name
