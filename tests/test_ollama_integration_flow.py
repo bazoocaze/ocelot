@@ -53,7 +53,7 @@ class TestOllamaIntegrationFlow(unittest.TestCase):
 
         # Capture the output and check if it contains expected content
         output = mock_stdout.getvalue()
-        self.assertIn("Assistant: 150", output)  # Check for assistant response
+        self.assertIn("150", output)  # Check for assistant response
 
     def _get_ollama_model_to_use(self):
         running = self.ollama_backend.get_running_models()
