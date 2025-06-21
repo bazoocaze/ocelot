@@ -169,7 +169,7 @@ def parse_args():
     list_models_parser = subparsers.add_parser('list-models', help='List available models')
     list_models_parser.add_argument("-p", "--provider_name",
                                     default='all',
-                                    help="Name of the backend to use. Format: [backend]. Supported backends: ollama, openrouter, all.")
+                                    help="Name of the backend to use. Supported backends: ollama, openrouter, all, others(config).")
     list_models_parser.add_argument("--plain", action="store_true",
                                     help="List models in plain text without formatting.")
     args = parser.parse_args()
