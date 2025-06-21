@@ -1,3 +1,5 @@
+from typing import List
+
 from rich.console import Console
 
 from src.base_llm_backend import BaseLLMBackend
@@ -52,3 +54,6 @@ class ProviderFactory:
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
 
         return cls(**kwargs)
+
+    def all_providers(self) -> List[str]:
+        return self._providers.keys()

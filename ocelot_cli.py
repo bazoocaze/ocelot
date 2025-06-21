@@ -15,6 +15,7 @@ from src.model_output import ModelOutput
 from src.base_llm_backend import BaseLLMBackend
 from src.chat_session import ChatSession
 
+
 def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
     if debug:
@@ -30,10 +31,12 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False):
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
 
+
 def generate_on_backend(backend: BaseLLMBackend, prompt: str, show_reasoning: bool, debug: bool = False) -> int:
     tokens = backend.generate(prompt, stream=True)
     output_tokens(tokens, show_reasoning, debug=debug)
     return 0
+
 
 def run_generate(config, args):
     provider_factory = ProviderFactory(config)
@@ -54,6 +57,7 @@ def run_generate(config, args):
         if debug:
             print_exc()
         return 1
+
 
 def interactive_chat(config, args):
     provider_factory = ProviderFactory(config)
@@ -112,6 +116,7 @@ def interactive_chat(config, args):
 
     return 0
 
+
 def list_models(config, args):
     provider_factory = ProviderFactory(config)
     provider_name = args.provider_name
@@ -119,16 +124,12 @@ def list_models(config, args):
     plain = args.plain
 
     try:
-        if provider_name == 'all':
-            all_providers = provider_factory.BACKEND_CLASSES.keys()
-            models = []
-            for provider in all_providers:
-                backend = provider_factory.resolve_backend(provider, debug=debug)
-                provider_models = backend.list_models()
-                models.extend([f"{provider}/{model}" for model in provider_models])
-        else:
-            backend = provider_factory.resolve_backend(provider_name, debug=debug)
-            models = backend.list_models()
+        models = []
+        providers = provider_factory.all_providers() if provider_name == 'all' else [provider_name]
+        for provider in providers:
+            backend = provider_factory.resolve_backend(provider_name=provider, debug=debug)
+            provider_models = backend.list_models()
+            models.extend([f"{provider}/{model}" for model in provider_models])
 
         if plain:
             for model in models:
@@ -144,6 +145,7 @@ def list_models(config, args):
         return 1
 
     return 0
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
@@ -177,6 +179,7 @@ def parse_args():
 
     return args
 
+
 def main():
     args = parse_args()
 
@@ -196,6 +199,7 @@ def main():
     console.print("Invalid command.", style="bold red")
 
     return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())
