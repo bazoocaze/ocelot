@@ -39,12 +39,17 @@ class TestOllamaIntegrationFlow(unittest.TestCase):
         self.assertIn("150", output)  # Check for assistant response
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_chat_command_ollama(self, mock_stdout):
+    @patch('sys.stdin', new_callable=StringIO)
+    def test_chat_command_ollama(self, mock_stdin, mock_stdout):
         # Run a real model name to use
         model_name = self._get_ollama_model_to_use()
 
+        # Mock the input for the chat command
+        mock_stdin.write("Hello\nexit\n")
+        mock_stdin.seek(0)
+
         # Run the chat command with a real model name
-        run_application(self.config_loader, ['--plain', 'chat', '-m', model_name, '--initial-prompt', 'Hello'])
+        run_application(self.config_loader, ['--plain', 'chat', '-m', model_name])
 
         # Capture the output and check if it contains expected content
         output = mock_stdout.getvalue()
