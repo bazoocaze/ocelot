@@ -180,13 +180,12 @@ def parse_args():
     return args
 
 
-def main():
+def run_app(config_loader: ConfigLoader):
     args = parse_args()
 
     if not args.command:
         return 1
 
-    config_loader = ConfigLoader()
     config = config_loader.load_config()
 
     if args.command == 'generate':
@@ -199,6 +198,11 @@ def main():
     console.print("Invalid command.", style="bold red")
 
     return 1
+
+
+def main():
+    config_loader = ConfigLoader()
+    return run_app(config_loader)
 
 
 if __name__ == "__main__":
