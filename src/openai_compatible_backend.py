@@ -89,11 +89,7 @@ class OpenAiCompatibleApiBackend(BaseLLMBackend):
 
     def chat(self, messages: List[Dict[str, str]], stream: bool = False) -> Union[str, Generator[str, None, None]]:
         url = f"{self._base_url}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "HTTP-Referer": "https://github.com/bazoocaze/ocelot",
-            "X-Title": "Ocelot CLI"
-        }
+        headers = self._extra_headers.copy()
 
         payload = {
             "model": self._model_name,

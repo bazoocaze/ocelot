@@ -4,8 +4,7 @@ from pathlib import Path
 import requests
 import yaml
 
-DEFAULT_CONFIG_FILENAME = "config.yml"
-DEFAULT_APP_NAME = "ocelot-cli"
+from src.constants import APP_NAME, CONFIG_FILENAME, OLLAMA_DEFAULT_ENDPOINT
 
 
 class ConfigLoader:
@@ -13,7 +12,7 @@ class ConfigLoader:
         config_home = Path(os.getenv("XDG_CONFIG_HOME") or Path.home() / ".config")
         return config_home / app_name / filename
 
-    def _ollama_is_running(self, base_url="http://localhost:11434") -> bool:
+    def _ollama_is_running(self, base_url) -> bool:
         try:
             r = requests.get(f"{base_url}/api/tags", timeout=1)
             return r.ok
@@ -23,10 +22,11 @@ class ConfigLoader:
     def _get_default_providers(self) -> dict:
         providers = {}
 
-        if self._ollama_is_running():
+        endpoint = OLLAMA_DEFAULT_ENDPOINT
+        if self._ollama_is_running(endpoint):
             providers["ollama"] = {
                 "type": "ollama",
-                "base_url": "http://localhost:11434"
+                "base_url": endpoint
             }
 
         openrouter_key = os.getenv("OPENROUTER_API_KEY")
@@ -39,7 +39,7 @@ class ConfigLoader:
         return providers
 
     def load_config(self) -> dict:
-        path = self._get_config_path(DEFAULT_APP_NAME, DEFAULT_CONFIG_FILENAME)
+        path = self._get_config_path(APP_NAME, CONFIG_FILENAME)
         if path.exists():
             with path.open() as f:
                 return yaml.safe_load(f)
