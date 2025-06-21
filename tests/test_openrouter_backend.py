@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from src.openrouter_backend import OpenRouterBackend
 
 class TestOpenRouterBackend(unittest.TestCase):
@@ -128,6 +128,58 @@ class TestOpenRouterBackend(unittest.TestCase):
         self.assertEqual(headers["HTTP-Referer"], "https://github.com/bazoocaze/ocelot")
         self.assertIn("X-Title", headers)
         self.assertEqual(headers["X-Title"], "Ocelot CLI")
+
+    @patch('requests.post')
+    def test_generate_stream_success(self, mock_post):
+        mock_response = Mock()
+        mock_response.ok = True
+        mock_response.iter_lines.return_value = [
+            b'data: {"choices":[{"delta":{"content":"test content"}}]}',
+            b'data: [DONE]'
+        ]
+        mock_post.return_value = mock_response
+
+        result = list(self.backend.generate("test prompt", stream=True))
+        self.assertEqual(result, ["test content"])
+
+    @patch('requests.post')
+    def test_generate_stream_failure(self, mock_post):
+        mock_response = Mock()
+        mock_response.ok = False
+        mock_response.status_code = 400
+        mock_response.text = "Bad Request"
+        mock_post.return_value = mock_response
+
+        with self.assertRaises(RuntimeError) as context:
+            list(self.backend.generate("test prompt", stream=True))
+        self.assertIn("Request error: 400 - Bad Request", str(context.exception))
+
+    @patch('requests.post')
+    def test_chat_stream_success(self, mock_post):
+        mock_response = Mock()
+        mock_response.ok = True
+        mock_response.iter_lines.return_value = [
+            b'data: {"choices":[{"delta":{"content":"test content"}}]}',
+            b'data: [DONE]'
+        ]
+        mock_post.return_value = mock_response
+
+        messages = [{"role": "user", "content": "test message"}]
+        result = list(self.backend.chat(messages, stream=True))
+        self.assertEqual(result, ["test content"])
+
+    @patch('requests.post')
+    def test_chat_stream_failure(self, mock_post):
+        mock_response = Mock()
+        mock_response.ok = False
+        mock_response.status_code = 400
+        mock_response.text = "Bad Request"
+        mock_post.return_value = mock_response
+
+        messages = [{"role": "user", "content": "test message"}]
+        with self.assertRaises(RuntimeError) as context:
+            list(self.backend.chat(messages, stream=True))
+        self.assertIn("Request error: 400 - Bad Request", str(context.exception))
 
 if __name__ == '__main__':
     unittest.main()
