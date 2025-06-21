@@ -1,11 +1,10 @@
 import json
-from typing import List, Dict, Union, Generator
 
-import requests
 from rich.console import Console
 
+from src.openai_compatible_backend import OpenAiCompatibleApiBackend
+
 console = Console()
-from src.base_llm_backend import BaseLLMBackend  # Updated import path
 
 
 class OpenRouterResponse:
@@ -50,91 +49,13 @@ class OpenRouterResponse:
         return bool(self.content)
 
 
-class OpenRouterBackend(BaseLLMBackend):
+class OpenRouterBackend(OpenAiCompatibleApiBackend):
     def __init__(self, api_key: str, model_name: str, debug: bool = False, show_reasoning: bool = True,
-                 base_url: str = "https://openrouter.ai/api/v1", extra_headers: dict = None):
-        self._api_key = api_key
-        self._model_name = model_name
-        self._base_url = base_url
-        self._debug = debug
-        self._show_reasoning = show_reasoning
-        self._extra_headers = extra_headers or {}
-
-    def generate(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
-        url = f"{self._base_url}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
+                 base_url: str = "https://openrouter.ai/api/v1", **kwargs):
+        extra_headers = {
+            # "Authorization": f"Bearer {api_key}",
             "HTTP-Referer": "https://github.com/bazoocaze/ocelot",
             "X-Title": "Ocelot CLI"
         }
-
-        messages = [{"role": "user", "content": prompt}]
-
-        payload = {
-            "model": self._model_name,
-            "messages": messages,
-            "stream": stream
-        }
-
-        response = requests.post(url, headers=headers, json=payload, stream=stream)
-        if not response.ok:
-            if self._debug:
-                debug_text = response.text.splitlines()[0]
-                console.print(f"DEBUG: status={response.status_code}, text={debug_text}", style="bold")
-            raise RuntimeError(f"Request error: {response.status_code} - {response.text}")
-
-        if stream:
-            return self._stream_response(response)
-        else:
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
-
-    def chat(self, messages: List[Dict[str, str]], stream: bool = False) -> Union[str, Generator[str, None, None]]:
-        url = f"{self._base_url}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "HTTP-Referer": "https://github.com/bazoocaze/ocelot",
-            "X-Title": "Ocelot CLI"
-        }
-
-        payload = {
-            "model": self._model_name,
-            "messages": messages,
-            "stream": stream
-        }
-
-        response = requests.post(url, headers=headers, json=payload, stream=stream)
-        if not response.ok:
-            if self._debug:
-                debug_text = response.text.splitlines()[0]
-                console.print(f"DEBUG: status={response.status_code}, text={debug_text}", style="bold")
-            raise RuntimeError(f"Request error: {response.status_code} - {response.text}")
-
-        if stream:
-            return self._stream_response(response)
-        else:
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
-
-    def _stream_response(self, response: requests.Response) -> Generator[str, None, None]:
-        reasoning = False
-        for line in response.iter_lines():
-            if not line:
-                continue
-            response = OpenRouterResponse(line, self._debug)
-            if response.is_done:
-                break
-            if response.is_content:
-                if reasoning:
-                    reasoning = False
-                    yield "</think>\n\n"
-                yield response.content
-                continue
-            if response.is_reasoning and self._show_reasoning:
-                if not reasoning:
-                    reasoning = True
-                    yield "<think>"
-                yield response.reasoning
-                continue
-            if self._debug:
-                console.print(f"DEBUG: Unknown response: {response.line}", style="bold red")
+        super().__init__(api_key=api_key, base_url=base_url, model_name=model_name, debug=debug,
+                         show_reasoning=show_reasoning, extra_headers=extra_headers)

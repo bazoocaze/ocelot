@@ -32,13 +32,8 @@ class ConfigLoader:
         openrouter_key = os.getenv("OPENROUTER_API_KEY")
         if openrouter_key:
             providers["openrouter"] = {
-                "type": "openai",
-                "base_url": "https://openrouter.ai/api/v1",
-                "api_key": openrouter_key,
-                "extra_headers": {
-                    "HTTP-Referer": "http://localhost",
-                    "X-Title": "meu_cli"
-                }
+                "type": "openrouter",
+                "api_key": openrouter_key
             }
 
         return providers

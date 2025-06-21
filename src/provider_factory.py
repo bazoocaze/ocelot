@@ -2,13 +2,15 @@ from rich.console import Console
 
 from src.base_llm_backend import BaseLLMBackend
 from src.ollama_backend import OllamaBackend
+from src.openai_compatible_backend import OpenAiCompatibleApiBackend
 from src.openrouter_backend import OpenRouterBackend
 
 console = Console()
 
 BACKEND_CLASSES = {
     "ollama": OllamaBackend,
-    "openai": OpenRouterBackend,
+    "openrouter": OpenRouterBackend,
+    "openai": OpenAiCompatibleApiBackend,
 }
 
 
