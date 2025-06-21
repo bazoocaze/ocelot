@@ -2,6 +2,7 @@
 python_version = "3.12"
 
 [dev-packages]
+coverage = "*"
 
 [packages]
 requests = "*"
