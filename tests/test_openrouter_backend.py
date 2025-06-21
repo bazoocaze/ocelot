@@ -90,5 +90,44 @@ class TestOpenRouterBackend(unittest.TestCase):
             self.backend.list_models()
         self.assertIn("Request error: 400 - Bad Request", str(context.exception))
 
+    @patch('requests.post')
+    def test_generate_headers(self, mock_post):
+        mock_response = unittest.mock.Mock()
+        mock_response.ok = True
+        mock_response.json.return_value = {
+            "choices": [
+                {"message": {"content": "test content"}}
+            ]
+        }
+        mock_post.return_value = mock_response
+
+        self.backend.generate("test prompt")
+        args, kwargs = mock_post.call_args
+        headers = kwargs.get('headers', {})
+        self.assertIn("HTTP-Referer", headers)
+        self.assertEqual(headers["HTTP-Referer"], "https://github.com/bazoocaze/ocelot")
+        self.assertIn("X-Title", headers)
+        self.assertEqual(headers["X-Title"], "Ocelot CLI")
+
+    @patch('requests.post')
+    def test_chat_headers(self, mock_post):
+        mock_response = unittest.mock.Mock()
+        mock_response.ok = True
+        mock_response.json.return_value = {
+            "choices": [
+                {"message": {"content": "test content"}}
+            ]
+        }
+        mock_post.return_value = mock_response
+
+        messages = [{"role": "user", "content": "test message"}]
+        self.backend.chat(messages)
+        args, kwargs = mock_post.call_args
+        headers = kwargs.get('headers', {})
+        self.assertIn("HTTP-Referer", headers)
+        self.assertEqual(headers["HTTP-Referer"], "https://github.com/bazoocaze/ocelot")
+        self.assertIn("X-Title", headers)
+        self.assertEqual(headers["X-Title"], "Ocelot CLI")
+
 if __name__ == '__main__':
     unittest.main()
