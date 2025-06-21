@@ -155,21 +155,21 @@ def parse_args():
     generate_parser = subparsers.add_parser('generate', help='Generate text from a prompt')
     generate_parser.add_argument("-m", "--model_name",
                                  required=True,
-                                 help="Name of the model to use. Format: [backend/]model_name. Default backend: ollama")
+                                 help="Name of the model to use. Format: [backend/]model_name.")
     generate_parser.add_argument("prompt", help="The text prompt to send to the model.")
     generate_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
     # Interactive chat command
     chat_parser = subparsers.add_parser('chat', help='Interactive chat with the model')
     chat_parser.add_argument("-m", "--model_name",
                              required=True,
-                             help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter")
+                             help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter.")
     chat_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
     chat_parser.add_argument("--initial-prompt", type=str, help="Initial prompt to send to the model.")
     # List models command
     list_models_parser = subparsers.add_parser('list-models', help='List available models')
     list_models_parser.add_argument("-p", "--provider_name",
                                     default='all',
-                                    help="Name of the backend to use. Format: [backend]. Supported backends: ollama, openrouter, all")
+                                    help="Name of the backend to use. Format: [backend]. Supported backends: ollama, openrouter, all.")
     list_models_parser.add_argument("--plain", action="store_true",
                                     help="List models in plain text without formatting.")
     args = parser.parse_args()
