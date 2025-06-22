@@ -22,36 +22,14 @@ _ocelot_cli_completions() {
         return 0
     fi
 
-    # Detect subcommand (primeiro token não-flag)
-    local cmd=""
-    for (( i=1; i < ${#COMP_WORDS[@]}; i++ )); do
-        local word="${COMP_WORDS[i]}"
-        if [[ "$word" != -* ]]; then
-            cmd="$word"
-            break
-        fi
-    done
-
-    # Se ainda estamos completando o subcomando (cword == 1)
-    if [[ -z "$cmd" && $cword -eq 1 ]]; then
-        COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
-        return 0
-    fi
-
-    # Se cmd está parcialmente digitado (ex: 'ge'), complete como subcomando
-    if [[ -z "$cmd" ]]; then
-        COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
-        return 0
-    fi
-
-    case "$cmd" in
+    case ${words[1]} in
         generate|chat)
             if [[ "$prev" == "-m" || "$prev" == "--model_name" ]]; then
                 local models=$(_ocelot_cli_list_models_cached "$script")
                 COMPREPLY=( $(compgen -W "$models" -- "$cur") )
                 return 0
             fi
-            COMPREPLY=( $(compgen -W "-m --model_name --no-show-reasoning --plain --debug" -- "$cur") )
+            COMPREPLY=( $(compgen -W "-m --model_name --no-show-reasoning --plain --debug --initial-prompt" -- "$cur") )
             ;;
         list-models)
             COMPREPLY=( $(compgen -W "-p --provider_name --plain --debug" -- "$cur") )
