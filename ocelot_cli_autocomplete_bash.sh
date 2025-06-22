@@ -16,6 +16,7 @@ _ocelot_cli_completions() {
 
     local script="${COMP_WORDS[0]}"
     local commands="generate chat list-models"
+    local arguments="-h --help --plain -d --debug"
 
     if [[ $cword -eq 1 ]]; then
         COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
@@ -25,16 +26,17 @@ _ocelot_cli_completions() {
     case ${words[1]} in
         generate|chat)
             if [[ "$prev" == "-m" || "$prev" == "--model_name" ]]; then
-                local models=$(_ocelot_cli_list_models_cached "$script")
-                COMPREPLY=( $(compgen -W "$models" -- "$cur") )
-                return 0
+                arguments="$(_ocelot_cli_list_models_cached "$script")"
+            else
+                arguments="${arguments} -m --model_name --no-show-reasoning --initial-prompt"
             fi
-            COMPREPLY=( $(compgen -W "-m --model_name --no-show-reasoning --plain --debug --initial-prompt" -- "$cur") )
             ;;
         list-models)
-            COMPREPLY=( $(compgen -W "-p --provider_name --plain --debug" -- "$cur") )
+            arguments="${arguments} --provider_name -p"
             ;;
     esac
+
+    COMPREPLY=( $(compgen -W "${arguments}" -- "$cur") )
 }
 
 complete -F _ocelot_cli_completions ocelot_cli

@@ -36,14 +36,6 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool
 
 
 def command_generate(config, args):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--model_name", required=True)
-    parser.add_argument("prompt")
-    parser.add_argument("--no-show-reasoning", action="store_true")
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--plain", action="store_true")
-    args = parser.parse_args(args)
-
     provider_factory = ProviderFactory(config)
     provider_name, model_name = provider_factory.parse_model_name(args.model_name)
     backend = provider_factory.resolve_backend(provider_name, model_name, debug=args.debug,
@@ -54,13 +46,6 @@ def command_generate(config, args):
 
 
 def command_chat(config, args):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--model_name", required=True)
-    parser.add_argument("--no-show-reasoning", action="store_true")
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--plain", action="store_true")
-    parser.add_argument("--initial-prompt")
-    args = parser.parse_args(args)
     show_reasoning = not args.no_show_reasoning
 
     provider_factory = ProviderFactory(config)
@@ -104,12 +89,6 @@ def command_chat(config, args):
 
 
 def command_list_models(config, args):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--provider_name", default="all")
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--plain", action="store_true")
-    args = parser.parse_args(args)
-
     provider_factory = ProviderFactory(config)
     providers = provider_factory.all_providers() if args.provider_name == "all" else [args.provider_name]
 
@@ -129,29 +108,37 @@ def command_list_models(config, args):
 
 
 def parse_args(input_args):
-    parser = argparse.ArgumentParser(description="Run a prompt on an LLM model.")
-    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode.")
-    parser.add_argument("--plain", action="store_true", help="Show output without formatting.")
+    parser = argparse.ArgumentParser(description="Command Line Interface for LLM Models.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
+
     # Generate command
-    generate_parser = subparsers.add_parser('generate', help='Generate text from a prompt')
-    generate_parser.add_argument("-m", "--model_name",
-                                 required=True,
-                                 help="Name of the model to use. Format: [backend/]model_name.")
-    generate_parser.add_argument("prompt", help="The text prompt to send to the model.")
+    generate_parser = subparsers.add_parser('generate', help='Generate text from a prompt',
+                                            description="Generate text from a prompt using the specified model.")
+    generate_parser.add_argument("-m", "--model_name", required=True,
+                                 help="Name of the model to use. Format: [provider/]model_name.")
     generate_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
+    generate_parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode.")
+    generate_parser.add_argument("--plain", action="store_true", help="Show output without formatting.")
+    generate_parser.add_argument("prompt", help="The text prompt to send to the model.")
+
     # Interactive chat command
-    chat_parser = subparsers.add_parser('chat', help='Interactive chat with the model')
-    chat_parser.add_argument("-m", "--model_name",
-                             required=True,
-                             help="Name of the model to use. Format: [backend/]model_name. Supported backends: ollama, openrouter.")
+    chat_parser = subparsers.add_parser('chat', help='Interactive chat with the model',
+                                        description="Start an interactive chat session with the specified model.")
+    chat_parser.add_argument("-m", "--model_name", required=True,
+                             help="Name of the model to use. Format: [provider/]model_name.")
     chat_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
     chat_parser.add_argument("--initial-prompt", type=str, help="Initial prompt to send to the model.")
+    chat_parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode.")
+    chat_parser.add_argument("--plain", action="store_true", help="Show output without formatting.")
+
     # List models command
-    list_models_parser = subparsers.add_parser('list-models', help='List available models')
-    list_models_parser.add_argument("-p", "--provider_name",
-                                    default='all',
-                                    help="Name of the backend to use. Supported backends: ollama, openrouter, all, others(config).")
+    list_models_parser = subparsers.add_parser('list-models', help='List available models',
+                                               description="List all available models from the specified provider(s).")
+    list_models_parser.add_argument("-p", "--provider_name", default='all',
+                                    help="Name of the provider to use. Supported providers: all, ollama, openrouter, others(via config).")
+    list_models_parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode.")
+    list_models_parser.add_argument("--plain", action="store_true", help="Show output without formatting.")
+
     args = parser.parse_args(input_args)
 
     if not args.command:
@@ -161,30 +148,27 @@ def parse_args(input_args):
 
 
 def run_application(config_loader: ConfigLoader, input_args):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["generate", "chat", "list-models"])
-    parser.add_argument("args", nargs=argparse.REMAINDER)
-    parsed = parser.parse_args(input_args)
-    parsed.debug = "-d" in input_args or "--debug" in input_args
+    args = parse_args(input_args)
+    debug = "-d" in input_args or "--debug" in input_args
 
     config = config_loader.load_config()
 
     try:
-        if parsed.command == "generate":
-            return command_generate(config, parsed.args)
-        elif parsed.command == "chat":
-            return command_chat(config, parsed.args)
-        elif parsed.command == "list-models":
-            return command_list_models(config, parsed.args)
+        if args.command == "generate":
+            return command_generate(config, args)
+        elif args.command == "chat":
+            return command_chat(config, args)
+        elif args.command == "list-models":
+            return command_list_models(config, args)
         else:
-            console.print("Invalid command.", style="bold red")
+            console.print("Invalid or missing command.", style="bold red")
             return 1
     except KeyboardInterrupt:
         console.print("Keyboard interrupt detected. Exiting...", style="bold red")
         return 1
     except Exception as e:
         console.print(f"ERROR: {e}", style="bold red")
-        if parsed.debug:
+        if debug:
             print_exc()
 
     return 1
