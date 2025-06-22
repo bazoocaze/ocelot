@@ -32,7 +32,7 @@ class TestOllamaIntegrationFlow(unittest.TestCase):
         model_name = self._get_ollama_model_to_use()
 
         # Run the generate command with a real model name
-        run_application(self.config_loader, ['--plain', 'generate', '-m', model_name, 'How much is 75 + 75?'])
+        run_application(self.config_loader, ['generate', '--plain', '-m', model_name, 'How much is 75 + 75?'])
 
         # Capture the output and check if it contains expected content
         output = mock_stdout.getvalue()
@@ -49,7 +49,7 @@ class TestOllamaIntegrationFlow(unittest.TestCase):
         mock_stdin.seek(0)
 
         # Run the chat command with a real model name
-        run_application(self.config_loader, ['--plain', 'chat', '-m', model_name])
+        run_application(self.config_loader, ['chat', '--plain', '-m', model_name])
 
         # Capture the output and check if it contains expected content
         output = mock_stdout.getvalue()

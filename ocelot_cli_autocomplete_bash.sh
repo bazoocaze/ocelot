@@ -1,93 +1,62 @@
-#!/bin/bash
-
-# Function to list available models
-_list_models() {
-    local cur prev words cword
-    COMPREPLY=()
-    _get_comp_words_by_ref -n : cur prev words cword
-    MODELS=$(${COMP_WORDS[0]} list-models --plain)
-    COMPREPLY=( $(compgen -W "${MODELS}" -- ${cur}) )
+_ocelot_cli_list_models_cached() {
+    local cli="$1"
+    local CACHE_FILE="$HOME/.cache/ocelot_cli_model_list.txt"
+    local CACHE_DURATION=3600  # 1 hour
+    if [[ ! -f "$CACHE_FILE" || $(( $(date +%s) - $(stat -c %Y "$CACHE_FILE") )) -gt $CACHE_DURATION ]]; then
+      mkdir -p "$(dirname "$CACHE_FILE")"
+      "$cli" list-models --plain > "$CACHE_FILE" 2>/dev/null || true
+    fi
+    cat "$CACHE_FILE"
 }
 
-# Function to generate completions for the 'generate' command
-_complete_generate() {
+_ocelot_cli_completions() {
+    COMP_WORDBREAKS=${COMP_WORDBREAKS//:/}
     local cur prev words cword
     _get_comp_words_by_ref -n : cur prev words cword
 
-    case $cword in
-        1)
-            COMPREPLY=( $(compgen -W "generate chat list-models" -- ${cur}) )
-            ;;
-        2)
-            if [[ $prev == "-m" || $prev == "--model_name" ]]; then
-                _list_models
-            else
-                COMPREPLY=( $(compgen -W "" -- ${cur}) )
+    local script="${COMP_WORDS[0]}"
+    local commands="generate chat list-models"
+
+    if [[ $cword -eq 1 ]]; then
+        COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
+        return 0
+    fi
+
+    # Detect subcommand (primeiro token não-flag)
+    local cmd=""
+    for (( i=1; i < ${#COMP_WORDS[@]}; i++ )); do
+        local word="${COMP_WORDS[i]}"
+        if [[ "$word" != -* ]]; then
+            cmd="$word"
+            break
+        fi
+    done
+
+    # Se ainda estamos completando o subcomando (cword == 1)
+    if [[ -z "$cmd" && $cword -eq 1 ]]; then
+        COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
+        return 0
+    fi
+
+    # Se cmd está parcialmente digitado (ex: 'ge'), complete como subcomando
+    if [[ -z "$cmd" ]]; then
+        COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
+        return 0
+    fi
+
+    case "$cmd" in
+        generate|chat)
+            if [[ "$prev" == "-m" || "$prev" == "--model_name" ]]; then
+                local models=$(_ocelot_cli_list_models_cached "$script")
+                COMPREPLY=( $(compgen -W "$models" -- "$cur") )
+                return 0
             fi
+            COMPREPLY=( $(compgen -W "-m --model_name --no-show-reasoning --plain --debug" -- "$cur") )
             ;;
-        *)
-            COMPREPLY=( $(compgen -W "" -- ${cur}) )
-            ;;
-    esac
-}
-
-# Function to generate completions for the 'chat' command
-_complete_chat() {
-    local cur prev words cword
-    _get_comp_words_by_ref -n : cur prev words cword
-
-    case $cword in
-        1)
-            COMPREPLY=( $(compgen -W "generate chat list-models" -- ${cur}) )
-            ;;
-        2)
-            if [[ $prev == "-m" || $prev == "--model_name" ]]; then
-                _list_models
-            else
-                COMPREPLY=( $(compgen -W "" -- ${cur}) )
-            fi
-            ;;
-        *)
-            COMPREPLY=( $(compgen -W "" -- ${cur}) )
+        list-models)
+            COMPREPLY=( $(compgen -W "-p --provider_name --plain --debug" -- "$cur") )
             ;;
     esac
 }
 
-# Function to generate completions for the 'list-models' command
-_complete_list_models() {
-    local cur prev words cword
-    _get_comp_words_by_ref -n : cur prev words cword
-
-    case $cword in
-        1)
-            COMPREPLY=( $(compgen -W "generate chat list-models" -- ${cur}) )
-            ;;
-        *)
-            COMPREPLY=( $(compgen -W "" -- ${cur}) )
-            ;;
-    esac
-}
-
-# Main completion function
-_complete_ocelot_cli() {
-    local cur prev words cword
-    _get_comp_words_by_ref -n : cur prev words cword
-
-    case $cword in
-        1)
-            COMPREPLY=( $(compgen -W "generate chat list-models" -- ${cur}) )
-            ;;
-        2)
-            if [[ $prev == "-m" || $prev == "--model_name" ]]; then
-                _list_models
-            else
-                COMPREPLY=( $(compgen -W "" -- ${cur}) )
-            fi
-            ;;
-        *)
-            COMPREPLY=( $(compgen -W "" -- ${cur}) )
-            ;;
-    esac
-}
-
-complete -F _complete_ocelot_cli ocelot_cli
+complete -F _ocelot_cli_completions ocelot_cli

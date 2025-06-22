@@ -36,32 +36,37 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool
 
 
 def command_generate(config, args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--model_name", required=True)
+    parser.add_argument("prompt")
+    parser.add_argument("--no-show-reasoning", action="store_true")
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--plain", action="store_true")
+    args = parser.parse_args(args)
+
     provider_factory = ProviderFactory(config)
     provider_name, model_name = provider_factory.parse_model_name(args.model_name)
-    prompt = args.prompt
-    debug = args.debug
-    show_reasoning = not args.no_show_reasoning
-    plain = args.plain
-
-    backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
-                                               show_reasoning=show_reasoning)
-
-    tokens = backend.generate(prompt, stream=True)
-    output_tokens(tokens, show_reasoning, debug=debug, plain=plain)
+    backend = provider_factory.resolve_backend(provider_name, model_name, debug=args.debug,
+                                               show_reasoning=not args.no_show_reasoning)
+    tokens = backend.generate(args.prompt, stream=True)
+    output_tokens(tokens, show_reasoning=not args.no_show_reasoning, debug=args.debug, plain=args.plain)
     return 0
 
 
 def command_chat(config, args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--model_name", required=True)
+    parser.add_argument("--no-show-reasoning", action="store_true")
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--plain", action="store_true")
+    parser.add_argument("--initial-prompt")
+    args = parser.parse_args(args)
+    show_reasoning = not args.no_show_reasoning
+
     provider_factory = ProviderFactory(config)
     provider_name, model_name = provider_factory.parse_model_name(args.model_name)
-    debug = args.debug
-    show_reasoning = not args.no_show_reasoning
-    plain = args.plain
-    initial_prompt = args.initial_prompt
-
-    backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
+    backend = provider_factory.resolve_backend(provider_name, model_name, debug=args.debug,
                                                show_reasoning=show_reasoning)
-
     chat_session = ChatSession(backend)
 
     console.print("Interactive chat started. Type 'exit' to quit.", style="bold green")
@@ -70,50 +75,56 @@ def command_chat(config, args):
     history_index = 0
     readline.set_startup_hook(lambda: readline.insert_text(command_history[history_index]))  # Initialize readline
 
-    while True:
-        if initial_prompt:
-            console.print(f"You: {initial_prompt}\n", end="")
-            user_input = initial_prompt
-            readline.add_history(initial_prompt)
-            initial_prompt = None
-        else:
-            user_input = input("You: ")
-            if user_input.lower() == "exit":
-                break
+    initial_prompt = args.initial_prompt
 
-        # Add the current input to the history
-        command_history.append(user_input)
-        history_index = len(command_history)
+    try:
+        while True:
+            if initial_prompt:
+                console.print(f"You: {initial_prompt}\n", end="")
+                user_input = initial_prompt
+                readline.add_history(initial_prompt)
+                initial_prompt = None
+            else:
+                user_input = input("You: ")
+                if user_input.lower() == "exit":
+                    break
 
-        response = chat_session.ask(user_input, stream=True)
+            # Add the current input to the history
+            command_history.append(user_input)
+            history_index = len(command_history)
 
-        console.print(f"Assistant: ", style="bright_blue", end="")
-        output_tokens(response, show_reasoning, debug=debug, plain=plain)
+            response = chat_session.ask(user_input, stream=True)
+
+            console.print(f"Assistant: ", style="bright_blue", end="")
+            output_tokens(response, show_reasoning, debug=args.debug, plain=args.plain)
+    except (EOFError, KeyboardInterrupt):
+        console.print("")
 
     return 0
 
 
 def command_list_models(config, args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--provider_name", default="all")
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--plain", action="store_true")
+    args = parser.parse_args(args)
+
     provider_factory = ProviderFactory(config)
-    provider_name = args.provider_name or 'all'
-    debug = args.debug
-    plain = args.plain
+    providers = provider_factory.all_providers() if args.provider_name == "all" else [args.provider_name]
 
     models = []
-    providers = provider_factory.all_providers() if provider_name == 'all' else [provider_name]
     for provider in providers:
-        backend = provider_factory.resolve_backend(provider_name=provider, debug=debug)
-        provider_models = backend.list_models()
-        models.extend([f"{provider}/{model}" for model in provider_models])
+        backend = provider_factory.resolve_backend(provider_name=provider, debug=args.debug)
+        models.extend([f"{provider}/{model}" for model in backend.list_models()])
 
-    if plain:
+    if args.plain:
         for model in models:
             print(model)
     else:
         console.print("Available models:", style="bold green")
         for model in models:
             console.print(f"- {model}")
-
     return 0
 
 
@@ -150,31 +161,30 @@ def parse_args(input_args):
 
 
 def run_application(config_loader: ConfigLoader, input_args):
-    args = parse_args(input_args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", choices=["generate", "chat", "list-models"])
+    parser.add_argument("args", nargs=argparse.REMAINDER)
+    parsed = parser.parse_args(input_args)
+    parsed.debug = "-d" in input_args or "--debug" in input_args
 
-    if not args.command:
-        return 1
+    config = config_loader.load_config()
 
     try:
-        config = config_loader.load_config()
-
-        if args.command == 'generate':
-            return command_generate(config, args)
-        elif args.command == 'chat':
-            return command_chat(config, args)
-        elif args.command == 'list-models':
-            return command_list_models(config, args)
-
-        console.print("Invalid command.", style="bold red")
-
-    except EOFError:
-        console.print("")
-        return 0
+        if parsed.command == "generate":
+            return command_generate(config, parsed.args)
+        elif parsed.command == "chat":
+            return command_chat(config, parsed.args)
+        elif parsed.command == "list-models":
+            return command_list_models(config, parsed.args)
+        else:
+            console.print("Invalid command.", style="bold red")
+            return 1
     except KeyboardInterrupt:
         console.print("Keyboard interrupt detected. Exiting...", style="bold red")
+        return 1
     except Exception as e:
         console.print(f"ERROR: {e}", style="bold red")
-        if args.debug:
+        if parsed.debug:
             print_exc()
 
     return 1
@@ -182,8 +192,9 @@ def run_application(config_loader: ConfigLoader, input_args):
 
 def main():
     config_loader = ConfigLoader()
-    return run_application(config_loader, sys.argv[1:] if len(sys.argv) > 1 else None)
+    exit_code = run_application(config_loader, sys.argv[1:] if len(sys.argv) > 1 else [])
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
