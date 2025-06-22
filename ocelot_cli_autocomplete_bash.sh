@@ -90,4 +90,4 @@ _complete_ocelot_cli() {
     esac
 }
 
-complete -F _complete_ocelot_cli ocelot_cli.py
+complete -F _complete_ocelot_cli ocelot_cli
