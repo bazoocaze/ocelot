@@ -108,7 +108,7 @@ def command_list_models(config, args):
 
 
 def parse_args(input_args):
-    parser = argparse.ArgumentParser(description="Command Line Interface for LLM Models.")
+    parser = argparse.ArgumentParser(description="Jaguatirica Command Line Interface for LLM Models.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
 
     # Generate command
