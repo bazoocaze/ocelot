@@ -1,4 +1,4 @@
-# Ocelot CLI - Command Line Interface for LLM Models
+# Ocelot CLI - Jaguatirica Command Line Interface for LLM Models
 
 ## Overview
 `ocelot_cli` is a command-line interface (CLI) tool designed to interact with large language models (LLMs) through various backends. It supports generating text from prompts, engaging in interactive chats, and listing available models. The tool is built with Python and uses the `rich` library for enhanced terminal output.
