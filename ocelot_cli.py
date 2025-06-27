@@ -9,7 +9,7 @@ from rich.markdown import Markdown
 
 from src.config import ConfigLoader
 from src.provider_factory import ProviderFactory
-from prompt_preprocessor import PromptPreprocessor
+from src.prompt_preprocessor import PromptPreprocessor
 
 console = Console()
 from src.model_output import ModelOutput
