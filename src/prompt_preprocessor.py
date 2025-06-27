@@ -4,7 +4,7 @@ from pathlib import Path
 
 class PromptPreprocessor:
     def __init__(self):
-        self.file_reference_pattern = re.compile(r'@@(\w+)')
+        self.file_reference_pattern = re.compile(r'@@(\S+)')
 
     def process_prompt(self, prompt: str) -> str:
         def replace_file_reference(match):
