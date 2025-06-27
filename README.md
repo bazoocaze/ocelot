@@ -9,6 +9,7 @@
 - **Model Management**: List available models from supported backends.
 - **Rich Output**: Styled terminal output using the `rich` library.
 - **Extensible Architecture**: Supports multiple providers like Ollama, OpenRouter, and more.
+- **Prompt Preprocessor**: Automatically include file contents in prompts using file references.
 
 ## Prerequisites
 - Python 3.12
@@ -111,6 +112,33 @@ echo "Write a short story about a robot." | ./ocelot_cli.sh generate -m openrout
 ## Configuration
 
 The tool uses a `ConfigLoader` to manage backend configurations. Ensure your `.env` file (if used) is correctly set up in the project root.
+
+## Prompt Preprocessor
+
+The `prompt_preprocessor` feature allows you to include the contents of files in your prompts. To use this feature, include a file reference in your prompt using the `@@filename` syntax. The preprocessor will automatically replace the reference with the file's contents.
+
+### Example
+
+Given a file named `example.txt` with the following content:
+```
+This is an example file.
+```
+
+You can include its contents in a prompt like this:
+```
+Explain the following text: @@example.txt
+```
+
+The preprocessor will replace `@@example.txt` with the actual contents of the file:
+```
+Explain the following text:
+
+FILE: example.txt
+```
+```
+This is an example file.
+```
+```
 
 ## Contributing
 
