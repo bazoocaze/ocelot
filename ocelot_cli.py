@@ -62,7 +62,7 @@ def command_chat(config, args):
                                                show_reasoning=show_reasoning)
     chat_session = ChatSession(backend)
 
-    console.print("Interactive chat started. Type 'exit' to quit.", style="bold green")
+    console.print("Interactive chat started. Type '/help' for available commands.", style="bold green")
 
     command_history = []
     history_index = 0
@@ -88,10 +88,18 @@ def command_chat(config, args):
                 if user_input.lower() == "exit":
                     break
 
-            # Check for toggle command
-            if user_input.lower() == "toggle plain":
-                plain = not plain
-                console.print(f"Plain mode {'enabled' if plain else 'disabled'}", style="bold green")
+            # Check for commands
+            if user_input.startswith('/'):
+                command = user_input[1:].lower()
+                if command == "toggle plain":
+                    plain = not plain
+                    console.print(f"Plain mode {'enabled' if plain else 'disabled'}", style="bold green")
+                elif command == "help":
+                    console.print("Available commands:", style="bold green")
+                    console.print("/toggle plain - Toggle plain mode on/off")
+                    console.print("/help - Show this help message")
+                else:
+                    console.print(f"Unknown command: {user_input}", style="bold red")
                 continue
 
             # Add the current input to the history
