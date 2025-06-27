@@ -9,6 +9,7 @@ from rich.markdown import Markdown
 
 from src.config import ConfigLoader
 from src.provider_factory import ProviderFactory
+from prompt_preprocessor import PromptPreprocessor
 
 console = Console()
 from src.model_output import ModelOutput
@@ -43,7 +44,11 @@ def command_generate(config, args):
     if not args.prompt:
         args.prompt = sys.stdin.read().strip()
 
-    tokens = backend.generate(args.prompt, stream=True)
+    # Pre-process the prompt
+    preprocessor = PromptPreprocessor()
+    processed_prompt = preprocessor.process_prompt(args.prompt)
+
+    tokens = backend.generate(processed_prompt, stream=True)
     output_tokens(tokens, show_reasoning=not args.no_show_reasoning, debug=args.debug, plain=args.plain)
     return 0
 
