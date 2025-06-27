@@ -58,7 +58,7 @@
 ```
 - **Example**:
   ```bash
-  ./ocelot_cli.sh chat -m openrouter/gpt-3.5 "Hi, how are you?"
+  ./ocelot_cli.sh chat -m openrouter/gpt-3.5 --initial-prompt "Hi, how are you?"
   ```
 - **Exit Chat**: Type `exit` to quit.
 
