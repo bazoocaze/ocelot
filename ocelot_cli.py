@@ -84,10 +84,10 @@ def command_chat(config, args):
         elif text.startswith('@@'):
             # Get the current directory
             current_dir = os.getcwd()
-            # List all files in the current directory
-            files = [f for f in os.listdir(current_dir) if os.path.isfile(os.path.join(current_dir, f))]
-            # Filter files that match the input text
-            options = [f for f in files if f.startswith(text[2:])]
+            # List all files and directories in the current directory
+            entries = [f for f in os.listdir(current_dir) if os.path.isfile(os.path.join(current_dir, f)) or os.path.isdir(os.path.join(current_dir, f))]
+            # Filter entries that match the input text
+            options = [f for f in entries if f.startswith(text[2:])]
             if state < len(options):
                 return '@@' + options[state]
         return None
