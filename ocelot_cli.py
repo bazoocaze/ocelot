@@ -8,12 +8,13 @@ from rich.live import Live
 from rich.markdown import Markdown
 
 from src.config import ConfigLoader
-from src.provider_factory import ProviderFactory
 from src.prompt_preprocessor import PromptPreprocessor
+from src.provider_factory import ProviderFactory
 
 console = Console()
 from src.model_output import ModelOutput
 from src.chat_session import ChatSession
+
 
 def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
@@ -29,10 +30,12 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool
             output.add_token(token)
             print(f"{token}", end="", flush=True)
     else:
-        with Live(Markdown(output.content()), console=console, refresh_per_second=10) as live:
+        with Live(Markdown(output.content()), console=console, refresh_per_second=10,
+                  vertical_overflow="visible") as live:
             for token in tokens:
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
+
 
 def command_generate(config, args):
     provider_factory = ProviderFactory(config)
@@ -51,6 +54,7 @@ def command_generate(config, args):
     tokens = backend.generate(processed_prompt, stream=True)
     output_tokens(tokens, show_reasoning=not args.no_show_reasoning, debug=args.debug, plain=args.plain)
     return 0
+
 
 def command_chat(config, args):
     show_reasoning = not args.no_show_reasoning
@@ -100,6 +104,7 @@ def command_chat(config, args):
 
     return 0
 
+
 def command_list_models(config, args):
     provider_factory = ProviderFactory(config)
     providers = provider_factory.all_providers() if args.provider_name == "all" else [args.provider_name]
@@ -118,6 +123,7 @@ def command_list_models(config, args):
             console.print(f"- {model}")
     return 0
 
+
 def parse_args(input_args):
     parser = argparse.ArgumentParser(description="Jaguatirica Command Line Interface for LLM Models.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
@@ -130,7 +136,8 @@ def parse_args(input_args):
     generate_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
     generate_parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode.")
     generate_parser.add_argument("--plain", action="store_true", help="Show output without formatting.")
-    generate_parser.add_argument("prompt", nargs='?', help="The text prompt to send to the model. If not provided, read from standard input.")
+    generate_parser.add_argument("prompt", nargs='?',
+                                 help="The text prompt to send to the model. If not provided, read from standard input.")
 
     # Interactive chat command
     chat_parser = subparsers.add_parser('chat', help='Interactive chat with the model',
@@ -156,6 +163,7 @@ def parse_args(input_args):
         parser.print_help()
 
     return args
+
 
 def run_application(config_loader: ConfigLoader, input_args):
     args = parse_args(input_args)
@@ -183,10 +191,12 @@ def run_application(config_loader: ConfigLoader, input_args):
 
     return 1
 
+
 def main():
     config_loader = ConfigLoader()
     exit_code = run_application(config_loader, sys.argv[1:] if len(sys.argv) > 1 else [])
     sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()
