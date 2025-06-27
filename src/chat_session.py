@@ -25,10 +25,15 @@ class ChatSession:
         self.add_user(prompt)
         response = self.backend.chat(self.messages, stream=stream)
 
-        if stream:
-            for token in response:
-                yield token
-            self.add_assistant(response)
-        else:
+        if not stream:
             self.add_assistant(response)
             return response
+
+        def streaming_response():
+            full = ""
+            for token in response:
+                yield token
+                full += token
+            self.add_assistant(full)
+
+        return streaming_response()
