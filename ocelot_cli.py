@@ -41,7 +41,7 @@ def command_generate(config, args):
 
     # If prompt is not provided, read from standard input
     if not args.prompt:
-        args.prompt = input("Enter your prompt: ")
+        args.prompt = sys.stdin.read().strip()
 
     tokens = backend.generate(args.prompt, stream=True)
     output_tokens(tokens, show_reasoning=not args.no_show_reasoning, debug=args.debug, plain=args.plain)
