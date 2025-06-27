@@ -94,9 +94,13 @@ def command_chat(config, args):
                 if command == "toggle plain":
                     plain = not plain
                     console.print(f"Plain mode {'enabled' if plain else 'disabled'}", style="bold green")
+                elif command == "toggle reasoning":
+                    show_reasoning = not show_reasoning
+                    console.print(f"Reasoning mode {'enabled' if show_reasoning else 'disabled'}", style="bold green")
                 elif command == "help":
                     console.print("Available commands:", style="bold green")
                     console.print("/toggle plain - Toggle plain mode on/off")
+                    console.print("/toggle reasoning - Toggle reasoning mode on/off")
                     console.print("/help - Show this help message")
                 else:
                     console.print(f"Unknown command: {user_input}", style="bold red")
