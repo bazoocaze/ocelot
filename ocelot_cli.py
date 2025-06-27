@@ -1,9 +1,8 @@
 import argparse
+import os
 import readline
 import sys
 from traceback import print_exc
-import os
-from pathlib import Path
 
 from rich.console import Console
 from rich.live import Live
@@ -16,6 +15,7 @@ from src.provider_factory import ProviderFactory
 console = Console()
 from src.model_output import ModelOutput
 from src.chat_session import ChatSession
+
 
 def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
@@ -37,6 +37,7 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
 
+
 def command_generate(config, args):
     provider_factory = ProviderFactory(config)
     provider_name, model_name = provider_factory.parse_model_name(args.model_name)
@@ -54,6 +55,56 @@ def command_generate(config, args):
     tokens = backend.generate(processed_prompt, stream=True)
     output_tokens(tokens, show_reasoning=not args.no_show_reasoning, debug=args.debug, plain=args.plain)
     return 0
+
+
+def custom_file_reference_completer(text: str, state: int, safe: bool = True):
+    if not text.startswith('@@'):
+        return None
+
+    path = text[2:]
+
+    # Protection against absolute or unsafe paths
+    if safe and (path.startswith('/') or '..' in path or path.startswith('~') or '//' in path):
+        return None
+
+    dirname = os.path.dirname(path)
+    prefix = os.path.basename(path)
+
+    base_dir = os.getcwd()
+    dir_to_list = os.path.join(base_dir, dirname)
+    dir_to_list = os.path.realpath(dir_to_list)  # resolve symlinks
+
+    # Security: disallow access outside the base directory
+    if safe and not dir_to_list.startswith(os.path.realpath(base_dir)):
+        return None
+
+    if not os.path.isdir(dir_to_list):
+        return None
+
+    try:
+        entries = os.listdir(dir_to_list)
+    except Exception:
+        return None
+
+    matches = []
+    for entry in entries:
+        if entry.startswith(prefix):
+            full_path = os.path.join(dirname, entry) if dirname else entry
+            entry_path = os.path.join(dir_to_list, entry)
+
+            # Prevent matches that escape the base directory
+            if safe and not os.path.realpath(entry_path).startswith(os.path.realpath(base_dir)):
+                continue
+
+            if os.path.isdir(entry_path):
+                full_path += '/'
+            matches.append('@@' + full_path)
+
+    matches.sort()
+    if state < len(matches):
+        return matches[state]
+    return None
+
 
 def command_chat(config, args):
     show_reasoning = not args.no_show_reasoning
@@ -82,14 +133,7 @@ def command_chat(config, args):
             if state < len(options):
                 return '/' + options[state]
         elif text.startswith('@@'):
-            # Get the current directory
-            current_dir = os.getcwd()
-            # List all files and directories in the current directory
-            entries = [f for f in os.listdir(current_dir) if os.path.isfile(os.path.join(current_dir, f)) or os.path.isdir(os.path.join(current_dir, f))]
-            # Filter entries that match the input text
-            options = [f for f in entries if f.startswith(text[2:])]
-            if state < len(options):
-                return '@@' + options[state]
+            return custom_file_reference_completer(text, state)
         return None
 
     # Set the custom completer for readline
@@ -166,6 +210,7 @@ def command_chat(config, args):
 
     return 0
 
+
 def command_list_models(config, args):
     provider_factory = ProviderFactory(config)
     providers = provider_factory.all_providers() if args.provider_name == "all" else [args.provider_name]
@@ -183,6 +228,7 @@ def command_list_models(config, args):
         for model in models:
             console.print(f"- {model}")
     return 0
+
 
 def parse_args(input_args):
     parser = argparse.ArgumentParser(description="Jaguatirica Command Line Interface for LLM Models.")
@@ -224,6 +270,7 @@ def parse_args(input_args):
 
     return args
 
+
 def run_application(config_loader: ConfigLoader, input_args):
     args = parse_args(input_args)
     debug = "-d" in input_args or "--debug" in input_args
@@ -250,10 +297,12 @@ def run_application(config_loader: ConfigLoader, input_args):
 
     return 1
 
+
 def main():
     config_loader = ConfigLoader()
     exit_code = run_application(config_loader, sys.argv[1:] if len(sys.argv) > 1 else [])
     sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()
