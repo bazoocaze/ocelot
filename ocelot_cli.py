@@ -2,6 +2,8 @@ import argparse
 import readline
 import sys
 from traceback import print_exc
+import os
+from pathlib import Path
 
 from rich.console import Console
 from rich.live import Live
@@ -79,6 +81,15 @@ def command_chat(config, args):
             options = [cmd for cmd in internal_commands if cmd.startswith(text[1:])]
             if state < len(options):
                 return '/' + options[state]
+        elif text.startswith('@'):
+            # Get the current directory
+            current_dir = os.getcwd()
+            # List all files in the current directory
+            files = [f for f in os.listdir(current_dir) if os.path.isfile(os.path.join(current_dir, f))]
+            # Filter files that match the input text
+            options = [f for f in files if f.startswith(text[1:])]
+            if state < len(options):
+                return '@' + options[state]
         return None
 
     # Set the custom completer for readline
