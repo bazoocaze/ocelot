@@ -99,13 +99,13 @@ def command_chat(config, args):
             # Check for commands
             if user_input.startswith('/'):
                 command = user_input[1:].lower()
-                if command == "toggle plain":
+                if command == "plain":
                     plain = not plain
                     console.print(f"Plain mode {'enabled' if plain else 'disabled'}", style="bold green")
-                elif command == "toggle reasoning":
+                elif command == "reasoning":
                     show_reasoning = not show_reasoning
                     console.print(f"Reasoning mode {'enabled' if show_reasoning else 'disabled'}", style="bold green")
-                elif command == "toggle debug":
+                elif command == "debug":
                     debug = not debug
                     console.print(f"Debug mode {'enabled' if debug else 'disabled'}", style="bold green")
                 elif command == "clear":
@@ -113,9 +113,9 @@ def command_chat(config, args):
                     console.print("Chat history cleared.", style="bold green")
                 elif command == "help":
                     console.print("Available commands:", style="bold green")
-                    console.print("/toggle plain - Toggle plain mode on/off")
-                    console.print("/toggle reasoning - Toggle reasoning mode on/off")
-                    console.print("/toggle debug - Toggle debug mode on/off")
+                    console.print("/plain - Toggle plain mode on/off")
+                    console.print("/reasoning - Toggle reasoning mode on/off")
+                    console.print("/debug - Toggle debug mode on/off")
                     console.print("/clear - Clear chat history")
                     console.print("/help - Show this help message")
                 else:
