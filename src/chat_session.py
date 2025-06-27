@@ -1,7 +1,6 @@
-from typing import List, Dict, Optional, Union, Generator
+from typing import Dict, List, Optional, Union, Generator
 
-from src.base_llm_backend import BaseLLMBackend  # Updated import path
-
+from src.base_llm_backend import BaseLLMBackend
 
 class ChatSession:
     def __init__(self, backend: BaseLLMBackend, system_prompt: Optional[str] = None):
@@ -19,18 +18,17 @@ class ChatSession:
     def add_assistant(self, content: str):
         self.messages.append({"role": "assistant", "content": content})
 
+    def clear_history(self):
+        self.messages = []
+
     def ask(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
         self.add_user(prompt)
         response = self.backend.chat(self.messages, stream=stream)
-        if not stream:
-            self.add_assistant(response)
-            return response
 
-        def streaming_response():
-            full = ""
+        if stream:
             for token in response:
                 yield token
-                full += token
-            self.add_assistant(full)
-
-        return streaming_response()
+            self.add_assistant(response)
+        else:
+            self.add_assistant(response)
+            return response
