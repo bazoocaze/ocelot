@@ -130,15 +130,14 @@ Explain the following text: @@example.txt
 ```
 
 The preprocessor will replace `@@example.txt` with the actual contents of the file:
-```
+````
 Explain the following text:
 
 FILE: example.txt
 ```
-```
 This is an example file.
 ```
-```
+````
 
 ## Contributing
 
