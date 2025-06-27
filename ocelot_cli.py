@@ -84,6 +84,7 @@ def command_chat(config, args):
     # Set the custom completer for readline
     readline.set_completer(custom_completer)
     readline.set_completer_delims(' ')
+    readline.parse_and_bind("tab: complete")  # Bind the tab key to the completer
 
     initial_prompt = args.initial_prompt
 
