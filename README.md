@@ -40,12 +40,13 @@
 
 #### 1. **Generate Text**
 ```bash
-./ocelot_cli.sh generate -m <model_name> "<prompt>"
+./ocelot_cli.sh generate -m <model_name> [prompt]
 ```
 - **Example**:
   ```bash
   ./ocelot_cli.sh generate -m ollama/llama2 "Explain quantum computing in simple terms."
   ```
+- **If prompt is not provided, the command will read from standard input.**
 
 #### 2. **Interactive Chat**
 ```bash
