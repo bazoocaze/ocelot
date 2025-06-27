@@ -119,7 +119,7 @@ def parse_args(input_args):
     generate_parser.add_argument("--no-show-reasoning", action="store_true", help="Hide reasoning process.")
     generate_parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode.")
     generate_parser.add_argument("--plain", action="store_true", help="Show output without formatting.")
-    generate_parser.add_argument("prompt", nargs='?', help="The text prompt to send to the model.")
+    generate_parser.add_argument("prompt", nargs='?', help="The text prompt to send to the model. If not provided, read from standard input.")
 
     # Interactive chat command
     chat_parser = subparsers.add_parser('chat', help='Interactive chat with the model',
