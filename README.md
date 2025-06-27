@@ -47,6 +47,10 @@
   ./ocelot_cli.sh generate -m ollama/llama2 "Explain quantum computing in simple terms."
   ```
 - **If prompt is not provided, the command will read from standard input.**
+- **Example using pipe**:
+  ```bash
+  echo "Explain quantum computing in simple terms." | ./ocelot_cli.sh generate -m ollama/llama2
+  ```
 
 #### 2. **Interactive Chat**
 ```bash
@@ -81,6 +85,11 @@
 ### Generate Text
 ```bash
 ./ocelot_cli.sh generate -m openrouter/gpt-3.5 "Write a short story about a robot."
+```
+
+### Generate Text using Pipe
+```bash
+echo "Write a short story about a robot." | ./ocelot_cli.sh generate -m openrouter/gpt-3.5
 ```
 
 ### Interactive Chat
