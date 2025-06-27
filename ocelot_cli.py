@@ -69,6 +69,9 @@ def command_chat(config, args):
 
     initial_prompt = args.initial_prompt
 
+    # Initialize the prompt preprocessor
+    preprocessor = PromptPreprocessor()
+
     try:
         while True:
             if initial_prompt:
@@ -85,7 +88,10 @@ def command_chat(config, args):
             command_history.append(user_input)
             history_index = len(command_history)
 
-            response = chat_session.ask(user_input, stream=True)
+            # Pre-process the user input
+            processed_input = preprocessor.process_prompt(user_input)
+
+            response = chat_session.ask(processed_input, stream=True)
 
             console.print(f"Assistant: ", style="bright_blue", end="")
             output_tokens(response, show_reasoning, debug=args.debug, plain=args.plain)
