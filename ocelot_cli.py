@@ -15,7 +15,6 @@ console = Console()
 from src.model_output import ModelOutput
 from src.chat_session import ChatSession
 
-
 def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool = False):
     output = ModelOutput(show_reasoning=show_reasoning)
     if debug:
@@ -36,7 +35,6 @@ def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool
                 output.add_token(token)
                 live.update(Markdown(output.content(), style="bright_blue"))
 
-
 def command_generate(config, args):
     provider_factory = ProviderFactory(config)
     provider_name, model_name = provider_factory.parse_model_name(args.model_name)
@@ -55,13 +53,13 @@ def command_generate(config, args):
     output_tokens(tokens, show_reasoning=not args.no_show_reasoning, debug=args.debug, plain=args.plain)
     return 0
 
-
 def command_chat(config, args):
     show_reasoning = not args.no_show_reasoning
+    debug = args.debug
 
     provider_factory = ProviderFactory(config)
     provider_name, model_name = provider_factory.parse_model_name(args.model_name)
-    backend = provider_factory.resolve_backend(provider_name, model_name, debug=args.debug,
+    backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
                                                show_reasoning=show_reasoning)
     chat_session = ChatSession(backend)
 
@@ -103,10 +101,14 @@ def command_chat(config, args):
                 elif command == "toggle reasoning":
                     show_reasoning = not show_reasoning
                     console.print(f"Reasoning mode {'enabled' if show_reasoning else 'disabled'}", style="bold green")
+                elif command == "toggle debug":
+                    debug = not debug
+                    console.print(f"Debug mode {'enabled' if debug else 'disabled'}", style="bold green")
                 elif command == "help":
                     console.print("Available commands:", style="bold green")
                     console.print("/toggle plain - Toggle plain mode on/off")
                     console.print("/toggle reasoning - Toggle reasoning mode on/off")
+                    console.print("/toggle debug - Toggle debug mode on/off")
                     console.print("/help - Show this help message")
                 else:
                     console.print(f"Unknown command: {user_input}", style="bold red")
@@ -122,12 +124,11 @@ def command_chat(config, args):
             response = chat_session.ask(processed_input, stream=True)
 
             console.print(f"Assistant: ", style="bright_blue", end="")
-            output_tokens(response, show_reasoning, debug=args.debug, plain=plain)
+            output_tokens(response, show_reasoning, debug=debug, plain=plain)
     except (EOFError, KeyboardInterrupt):
         console.print("")
 
     return 0
-
 
 def command_list_models(config, args):
     provider_factory = ProviderFactory(config)
@@ -146,7 +147,6 @@ def command_list_models(config, args):
         for model in models:
             console.print(f"- {model}")
     return 0
-
 
 def parse_args(input_args):
     parser = argparse.ArgumentParser(description="Jaguatirica Command Line Interface for LLM Models.")
@@ -188,7 +188,6 @@ def parse_args(input_args):
 
     return args
 
-
 def run_application(config_loader: ConfigLoader, input_args):
     args = parse_args(input_args)
     debug = "-d" in input_args or "--debug" in input_args
@@ -215,12 +214,10 @@ def run_application(config_loader: ConfigLoader, input_args):
 
     return 1
 
-
 def main():
     config_loader = ConfigLoader()
     exit_code = run_application(config_loader, sys.argv[1:] if len(sys.argv) > 1 else [])
     sys.exit(exit_code)
-
 
 if __name__ == "__main__":
     main()
