@@ -16,27 +16,40 @@ console = Console()
 from src.model_output import ModelOutput
 from src.chat_session import ChatSession
 
+class TokenOutput:
+    def __init__(self, show_reasoning: bool, debug: bool = False, plain: bool = False):
+        self.show_reasoning = show_reasoning
+        self.debug = debug
+        self.plain = plain
+        self.output = ModelOutput(show_reasoning=show_reasoning)
 
-def output_tokens(tokens, show_reasoning: bool, debug: bool = False, plain: bool = False):
-    output = ModelOutput(show_reasoning=show_reasoning)
-    if debug:
+    def _debug_output(self, tokens):
         for token in tokens:
-            output.add_token(token)
+            self.output.add_token(token)
             print(f"[{token}]", end="", flush=True)
         print("\n--- CONTENT ---")
-        print(output.content())
+        print(self.output.content())
         print("---")
-    if plain:
-        for token in tokens:
-            output.add_token(token)
-            print(f"{token}", end="", flush=True)
-    else:
-        with Live(Markdown(output.content()), console=console, refresh_per_second=10,
-                  vertical_overflow="visible") as live:
-            for token in tokens:
-                output.add_token(token)
-                live.update(Markdown(output.content(), style="bright_blue"))
 
+    def _plain_output(self, tokens):
+        for token in tokens:
+            self.output.add_token(token)
+            print(f"{token}", end="", flush=True)
+
+    def _rich_output(self, tokens):
+        with Live(Markdown(self.output.content()), console=console, refresh_per_second=10,
+                   vertical_overflow="visible") as live:
+            for token in tokens:
+                self.output.add_token(token)
+                live.update(Markdown(self.output.content(), style="bright_blue"))
+
+    def output_tokens(self, tokens):
+        if self.debug:
+            self._debug_output(tokens)
+        elif self.plain:
+            self._plain_output(tokens)
+        else:
+            self._rich_output(tokens)
 
 def command_generate(config, args):
     provider_factory = ProviderFactory(config)
@@ -53,9 +66,9 @@ def command_generate(config, args):
     processed_prompt = preprocessor.process_prompt(args.prompt)
 
     tokens = backend.generate(processed_prompt, stream=True)
-    output_tokens(tokens, show_reasoning=not args.no_show_reasoning, debug=args.debug, plain=args.plain)
+    token_output = TokenOutput(show_reasoning=not args.no_show_reasoning, debug=args.debug, plain=args.plain)
+    token_output.output_tokens(tokens)
     return 0
-
 
 def custom_file_reference_completer(text: str, state: int, safe: bool = True):
     if not text.startswith('@@'):
@@ -104,7 +117,6 @@ def custom_file_reference_completer(text: str, state: int, safe: bool = True):
     if state < len(matches):
         return matches[state]
     return None
-
 
 def command_chat(config, args):
     show_reasoning = not args.no_show_reasoning
@@ -201,7 +213,8 @@ def command_chat(config, args):
                 response = chat_session.ask(processed_input, stream=True)
 
                 console.print(f"Assistant: ", style="bright_blue", end="")
-                output_tokens(response, show_reasoning, debug=debug, plain=plain)
+                token_output = TokenOutput(show_reasoning, debug=debug, plain=plain)
+                token_output.output_tokens(response)
             except KeyboardInterrupt:
                 console.print("\nKeyboard interrupt detected", style="bold red")
 
@@ -209,7 +222,6 @@ def command_chat(config, args):
         console.print("")
 
     return 0
-
 
 def command_list_models(config, args):
     provider_factory = ProviderFactory(config)
@@ -228,7 +240,6 @@ def command_list_models(config, args):
         for model in models:
             console.print(f"- {model}")
     return 0
-
 
 def parse_args(input_args):
     parser = argparse.ArgumentParser(description="Jaguatirica Command Line Interface for LLM Models.")
@@ -270,7 +281,6 @@ def parse_args(input_args):
 
     return args
 
-
 def run_application(config_loader: ConfigLoader, input_args):
     args = parse_args(input_args)
     debug = "-d" in input_args or "--debug" in input_args
@@ -297,12 +307,10 @@ def run_application(config_loader: ConfigLoader, input_args):
 
     return 1
 
-
 def main():
     config_loader = ConfigLoader()
     exit_code = run_application(config_loader, sys.argv[1:] if len(sys.argv) > 1 else [])
     sys.exit(exit_code)
-
 
 if __name__ == "__main__":
     main()
