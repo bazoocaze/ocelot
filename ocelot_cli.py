@@ -14,6 +14,7 @@ from src.provider_factory import ProviderFactory
 from src.token_output import TokenOutput  # Import TokenOutput from the new file
 from src.model_output import ModelOutput
 from src.chat_session import ChatSession
+from src.chat_autocomplete import ChatAutocomplete  # Import the new ChatAutocomplete class
 
 console = Console()
 
@@ -36,54 +37,6 @@ def command_generate(config, args):
     token_output.output_tokens(tokens)
     return 0
 
-def custom_file_reference_completer(text: str, state: int, safe: bool = True):
-    if not text.startswith('@@'):
-        return None
-
-    path = text[2:]
-
-    # Protection against absolute or unsafe paths
-    if safe and (path.startswith('/') or '..' in path or path.startswith('~') or '//' in path):
-        return None
-
-    dirname = os.path.dirname(path)
-    prefix = os.path.basename(path)
-
-    base_dir = os.getcwd()
-    dir_to_list = os.path.join(base_dir, dirname)
-    dir_to_list = os.path.realpath(dir_to_list)  # resolve symlinks
-
-    # Security: disallow access outside the base directory
-    if safe and not dir_to_list.startswith(os.path.realpath(base_dir)):
-        return None
-
-    if not os.path.isdir(dir_to_list):
-        return None
-
-    try:
-        entries = os.listdir(dir_to_list)
-    except Exception:
-        return None
-
-    matches = []
-    for entry in entries:
-        if entry.startswith(prefix):
-            full_path = os.path.join(dirname, entry) if dirname else entry
-            entry_path = os.path.join(dir_to_list, entry)
-
-            # Prevent matches that escape the base directory
-            if safe and not os.path.realpath(entry_path).startswith(os.path.realpath(base_dir)):
-                continue
-
-            if os.path.isdir(entry_path):
-                full_path += '/'
-            matches.append('@@' + full_path)
-
-    matches.sort()
-    if state < len(matches):
-        return matches[state]
-    return None
-
 def command_chat(config, args):
     show_reasoning = not args.no_show_reasoning
     debug = args.debug
@@ -97,27 +50,9 @@ def command_chat(config, args):
     console.print("Interactive chat started. Type 'exit' to exit or '/help' for available commands.",
                   style="bold green")
 
-    command_history = []
-    history_index = 0
-    readline.set_startup_hook(lambda: readline.insert_text(command_history[history_index]))  # Initialize readline
-
-    # Define internal commands for autocomplete
-    internal_commands = ['plain', 'reasoning', 'debug', 'clear', 'help']
-
-    # Create a custom completer function
-    def custom_completer(text, state):
-        if text.startswith('/'):
-            options = [cmd for cmd in internal_commands if cmd.startswith(text[1:])]
-            if state < len(options):
-                return '/' + options[state]
-        elif text.startswith('@@'):
-            return custom_file_reference_completer(text, state)
-        return None
-
-    # Set the custom completer for readline
-    readline.set_completer(custom_completer)
-    readline.set_completer_delims(' ')
-    readline.parse_and_bind("tab: complete")  # Bind the tab key to the completer
+    # Initialize the chat autocomplete
+    chat_autocomplete = ChatAutocomplete()
+    chat_autocomplete.setup_readline()
 
     initial_prompt = args.initial_prompt
 
@@ -146,16 +81,17 @@ def command_chat(config, args):
             if user_input.startswith('/'):
                 command = user_input[1:].lower()
                 if command == "plain":
-                    plain = not plain
+                    plain = chat_autocomplete.toggle_plain()
                     console.print(f"Plain mode {'enabled' if plain else 'disabled'}", style="bold green")
                 elif command == "reasoning":
-                    show_reasoning = not show_reasoning
+                    show_reasoning = chat_autocomplete.toggle_reasoning()
                     console.print(f"Reasoning mode {'enabled' if show_reasoning else 'disabled'}", style="bold green")
                 elif command == "debug":
-                    debug = not debug
+                    debug = chat_autocomplete.toggle_debug()
                     console.print(f"Debug mode {'enabled' if debug else 'disabled'}", style="bold green")
                 elif command == "clear":
                     chat_session.clear_history()
+                    chat_autocomplete.clear_history()
                     console.print("Chat history cleared.", style="bold green")
                 elif command == "help":
                     console.print("Available commands:", style="bold green")
@@ -169,8 +105,7 @@ def command_chat(config, args):
                 continue
 
             # Add the current input to the history
-            command_history.append(user_input)
-            history_index = len(command_history)
+            chat_autocomplete.add_command_to_history(user_input)
 
             # Pre-process the user input
             processed_input = preprocessor.process_prompt(user_input)
