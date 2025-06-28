@@ -2,6 +2,7 @@ import re
 import sys
 from pathlib import Path
 
+
 class PromptPreprocessor:
     def __init__(self):
         self.file_reference_pattern = re.compile(r'@@(\S+)')
@@ -18,10 +19,3 @@ class PromptPreprocessor:
                 return match.group(0)  # Return the original reference if file not found
 
         return self.file_reference_pattern.sub(replace_file_reference, prompt)
-
-# Example usage
-if __name__ == "__main__":
-    preprocessor = PromptPreprocessor()
-    prompt = sys.stdin.read().strip()
-    processed_prompt = preprocessor.process_prompt(prompt)
-    print(processed_prompt)
