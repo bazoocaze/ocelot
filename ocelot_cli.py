@@ -1,22 +1,19 @@
 import argparse
-import os
 import readline
 import sys
 from traceback import print_exc
 
 from rich.console import Console
-from rich.live import Live
-from rich.markdown import Markdown
 
+from src.chat_commands import ChatCommands  # Import the new ChatAutocomplete class
+from src.chat_session import ChatSession
 from src.config import ConfigLoader
 from src.prompt_preprocessor import PromptPreprocessor
 from src.provider_factory import ProviderFactory
 from src.token_output import TokenOutput  # Import TokenOutput from the new file
-from src.model_output import ModelOutput
-from src.chat_session import ChatSession
-from src.chat_autocomplete import ChatAutocomplete  # Import the new ChatAutocomplete class
 
 console = Console()
+
 
 def command_generate(config, args):
     provider_factory = ProviderFactory(config)
@@ -37,30 +34,25 @@ def command_generate(config, args):
     token_output.output_tokens(tokens)
     return 0
 
+
 def command_chat(config, args):
     show_reasoning = not args.no_show_reasoning
-    debug = args.debug
-
     provider_factory = ProviderFactory(config)
     provider_name, model_name = provider_factory.parse_model_name(args.model_name)
-    backend = provider_factory.resolve_backend(provider_name, model_name, debug=debug,
+    backend = provider_factory.resolve_backend(provider_name, model_name, debug=args.debug,
                                                show_reasoning=show_reasoning)
     chat_session = ChatSession(backend)
+    preprocessor = PromptPreprocessor()
+    chat_commands = ChatCommands(chat_session=chat_session, plain=args.plain, show_reasoning=show_reasoning,
+                                 debug=args.debug)
 
     console.print("Interactive chat started. Type 'exit' to exit or '/help' for available commands.",
                   style="bold green")
 
     # Initialize the chat autocomplete
-    chat_autocomplete = ChatAutocomplete()
-    chat_autocomplete.setup_readline()
+    chat_commands.setup_readline()
 
     initial_prompt = args.initial_prompt
-
-    # Initialize the prompt preprocessor
-    preprocessor = PromptPreprocessor()
-
-    # Initialize plain flag
-    plain = args.plain
 
     try:
         while True:
@@ -78,34 +70,11 @@ def command_chat(config, args):
                 continue
 
             # Check for commands
-            if user_input.startswith('/'):
-                command = user_input[1:].lower()
-                if command == "plain":
-                    plain = chat_autocomplete.toggle_plain()
-                    console.print(f"Plain mode {'enabled' if plain else 'disabled'}", style="bold green")
-                elif command == "reasoning":
-                    show_reasoning = chat_autocomplete.toggle_reasoning()
-                    console.print(f"Reasoning mode {'enabled' if show_reasoning else 'disabled'}", style="bold green")
-                elif command == "debug":
-                    debug = chat_autocomplete.toggle_debug()
-                    console.print(f"Debug mode {'enabled' if debug else 'disabled'}", style="bold green")
-                elif command == "clear":
-                    chat_session.clear_history()
-                    chat_autocomplete.clear_history()
-                    console.print("Chat history cleared.", style="bold green")
-                elif command == "help":
-                    console.print("Available commands:", style="bold green")
-                    console.print("/plain - Toggle plain mode on/off")
-                    console.print("/reasoning - Toggle reasoning mode on/off")
-                    console.print("/debug - Toggle debug mode on/off")
-                    console.print("/clear - Clear chat history")
-                    console.print("/help - Show this help message")
-                else:
-                    console.print(f"Unknown command: {user_input}", style="bold red")
+            if chat_commands.process_command(user_input):
                 continue
 
             # Add the current input to the history
-            chat_autocomplete.add_command_to_history(user_input)
+            chat_commands.add_command_to_history(user_input)
 
             # Pre-process the user input
             processed_input = preprocessor.process_prompt(user_input)
@@ -114,7 +83,9 @@ def command_chat(config, args):
                 response = chat_session.ask(processed_input, stream=True)
 
                 console.print(f"Assistant: ", style="bright_blue", end="")
-                token_output = TokenOutput(show_reasoning, debug=debug, plain=plain)
+                print(f"[show_reasoning={chat_commands.show_reasoning}, plain={chat_commands.plain}]")
+                token_output = TokenOutput(show_reasoning=chat_commands.show_reasoning, debug=chat_commands.debug,
+                                           plain=chat_commands.plain)
                 token_output.output_tokens(response)
             except KeyboardInterrupt:
                 console.print("\nKeyboard interrupt detected", style="bold red")
@@ -123,6 +94,7 @@ def command_chat(config, args):
         console.print("")
 
     return 0
+
 
 def command_list_models(config, args):
     provider_factory = ProviderFactory(config)
@@ -141,6 +113,7 @@ def command_list_models(config, args):
         for model in models:
             console.print(f"- {model}")
     return 0
+
 
 def parse_args(input_args):
     parser = argparse.ArgumentParser(description="Jaguatirica Command Line Interface for LLM Models.")
@@ -182,6 +155,7 @@ def parse_args(input_args):
 
     return args
 
+
 def run_application(config_loader: ConfigLoader, input_args):
     args = parse_args(input_args)
     debug = "-d" in input_args or "--debug" in input_args
@@ -208,10 +182,12 @@ def run_application(config_loader: ConfigLoader, input_args):
 
     return 1
 
+
 def main():
     config_loader = ConfigLoader()
     exit_code = run_application(config_loader, sys.argv[1:] if len(sys.argv) > 1 else [])
     sys.exit(exit_code)
+
 
 if __name__ == "__main__":
     main()

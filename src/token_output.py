@@ -6,6 +6,7 @@ from src.model_output import ModelOutput
 
 console = Console()
 
+
 class TokenOutput:
     def __init__(self, show_reasoning: bool, debug: bool = False, plain: bool = False):
         self.show_reasoning = show_reasoning
@@ -28,7 +29,7 @@ class TokenOutput:
 
     def _rich_output(self, tokens):
         with Live(Markdown(self.output.content()), console=console, refresh_per_second=10,
-                   vertical_overflow="visible") as live:
+                  vertical_overflow="visible") as live:
             for token in tokens:
                 self.output.add_token(token)
                 live.update(Markdown(self.output.content(), style="bright_blue"))

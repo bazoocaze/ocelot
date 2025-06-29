@@ -1,15 +1,23 @@
 import os
 import readline
 
-class ChatAutocomplete:
-    def __init__(self, base_dir=os.getcwd()):
-        self.base_dir = base_dir
+from rich.console import Console
+
+console = Console()
+
+
+class ChatCommands:
+    def __init__(self, plain: bool = False, show_reasoning: bool = True, debug: bool = False, base_dir: str = None,
+                 chat_session=None):
+        self.base_dir = base_dir or os.getcwd()
+        self.plain = plain
+        self.show_reasoning = show_reasoning
+        self.debug = debug
+        self._chat_session = chat_session
+
         self.command_history = []
         self.history_index = 0
         self.internal_commands = ['plain', 'reasoning', 'debug', 'clear', 'help']
-        self.plain = False
-        self.show_reasoning = True
-        self.debug = False
 
     def custom_file_reference_completer(self, text: str, state: int, safe: bool = True):
         if not text.startswith('@@'):
@@ -77,18 +85,35 @@ class ChatAutocomplete:
         self.command_history.append(command)
         self.history_index = len(self.command_history)
 
-    def toggle_plain(self):
-        self.plain = not self.plain
-        return self.plain
-
-    def toggle_reasoning(self):
-        self.show_reasoning = not self.show_reasoning
-        return self.show_reasoning
-
-    def toggle_debug(self):
-        self.debug = not self.debug
-        return self.debug
-
     def clear_history(self):
         self.command_history = []
         self.history_index = 0
+        self._chat_session.clear_history()
+
+    def process_command(self, user_input: str):
+        if not user_input.startswith('/'):
+            return False
+        command = user_input[1:].lower()
+        if command == "plain":
+            self.plain = not self.plain
+            console.print(f"Plain mode {'enabled' if self.plain else 'disabled'}", style="bold green")
+        elif command == "reasoning":
+            self.show_reasoning = not self.show_reasoning
+            console.print(f"Reasoning mode {'enabled' if self.show_reasoning else 'disabled'}", style="bold green")
+        elif command == "debug":
+            self.debug = not self.debug
+            console.print(f"Debug mode {'enabled' if self.debug else 'disabled'}", style="bold green")
+        elif command == "clear":
+            self.clear_history()
+            console.print("Chat history cleared.", style="bold green")
+        elif command in ["help", "?", "h"]:
+            console.print("Available commands:", style="bold green")
+            console.print("/plain - Toggle plain mode on/off")
+            console.print("/reasoning - Toggle reasoning mode on/off")
+            console.print("/debug - Toggle debug mode on/off")
+            console.print("/clear - Clear chat history")
+            console.print("/help - Show this help message")
+        else:
+            console.print(f"Unknown command: {user_input}", style="bold red")
+
+        return True
