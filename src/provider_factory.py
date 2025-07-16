@@ -24,8 +24,8 @@ class ProviderFactory:
 
     def parse_model_name(self, model_name: str):
         if "/" not in model_name:
-            if len(self._providers.keys()) == 1:
-                return self._providers.keys()[0], model_name
+            if len(self.all_providers()) == 1:
+                return self.all_providers()[0], model_name
             else:
                 return "ollama", model_name
         return model_name.split("/", 1)
@@ -59,4 +59,4 @@ class ProviderFactory:
         return cls(**kwargs)
 
     def all_providers(self) -> List[str]:
-        return self._providers.keys()
+        return list(self._providers.keys())
