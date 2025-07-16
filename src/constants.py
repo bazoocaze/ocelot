@@ -1,5 +1,5 @@
 CONFIG_FILENAME = "config.yml"
 APP_NAME = "ocelot-cli"
-APP_REFERER = "https://github.com/bazoocaze/ocelot"
+APP_REFERER = "https://github.com/bazoocaze/ocelot-cli"
 APP_DISPLAY_NAME = "Ocelot CLI"
 OLLAMA_DEFAULT_ENDPOINT = "http://localhost:11434"

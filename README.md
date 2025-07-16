@@ -19,7 +19,7 @@
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/ocelot_cli.git
+   git clone https://github.com/bazoocaze/ocelot-cli.git
    cd ocelot_cli
    ```
 

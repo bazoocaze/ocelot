@@ -105,7 +105,7 @@ class TestOpenRouterBackend(unittest.TestCase):
         args, kwargs = mock_post.call_args
         headers = kwargs.get('headers', {})
         self.assertIn("HTTP-Referer", headers)
-        self.assertEqual(headers["HTTP-Referer"], "https://github.com/bazoocaze/ocelot")
+        self.assertEqual(headers["HTTP-Referer"], "https://github.com/bazoocaze/ocelot-cli")
         self.assertIn("X-Title", headers)
         self.assertEqual(headers["X-Title"], "Ocelot CLI")
 
@@ -125,7 +125,7 @@ class TestOpenRouterBackend(unittest.TestCase):
         args, kwargs = mock_post.call_args
         headers = kwargs.get('headers', {})
         self.assertIn("HTTP-Referer", headers)
-        self.assertEqual(headers["HTTP-Referer"], "https://github.com/bazoocaze/ocelot")
+        self.assertEqual(headers["HTTP-Referer"], "https://github.com/bazoocaze/ocelot-cli")
         self.assertIn("X-Title", headers)
         self.assertEqual(headers["X-Title"], "Ocelot CLI")
 
