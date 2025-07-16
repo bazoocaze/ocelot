@@ -8,7 +8,7 @@
 - **Interactive Chat**: Engage in real-time conversations with models.
 - **Model Management**: List available models from supported backends.
 - **Rich Output**: Styled terminal output using the `rich` library.
-- **Extensible Architecture**: Supports multiple providers like Ollama, OpenRouter, and more.
+- **Extensible Architecture**: Supports multiple providers like Ollama, OpenRouter, OpenAPI, and Gemini.
 - **Prompt Preprocessor**: Automatically include file contents in prompts using file references.
 
 ## Prerequisites

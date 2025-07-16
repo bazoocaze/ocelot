@@ -1,4 +1,5 @@
 import argparse
+import json
 import readline
 import sys
 from traceback import print_exc
@@ -114,6 +115,12 @@ def command_list_models(config, args):
     return 0
 
 
+def command_show_config(config, args):
+    console.print("Configuration:", style="bold green")
+    console.print(json.dumps(config, indent=2), style="bold green")
+    return 0
+
+
 def parse_args(input_args):
     parser = argparse.ArgumentParser(description="Jaguatirica Command Line Interface for LLM Models.")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
@@ -147,6 +154,10 @@ def parse_args(input_args):
     list_models_parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode.")
     list_models_parser.add_argument("--plain", action="store_true", help="Show output without formatting.")
 
+    # Show Config command
+    show_config_parser = subparsers.add_parser('show-config', help='Show loaded/detected configuration',
+                                               description="Show loaded/detected configuration.")
+
     args = parser.parse_args(input_args)
 
     if not args.command:
@@ -168,6 +179,8 @@ def run_application(config_loader: ConfigLoader, input_args):
             return command_chat(config, args)
         elif args.command == "list-models":
             return command_list_models(config, args)
+        elif args.command == "show-config":
+            return command_show_config(config, args)
         else:
             console.print("Invalid or missing command.", style="bold red")
             return 1

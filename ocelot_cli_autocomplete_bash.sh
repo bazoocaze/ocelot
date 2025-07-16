@@ -15,7 +15,7 @@ _ocelot_cli_completions() {
     _get_comp_words_by_ref -n : cur prev words cword
 
     local script="${COMP_WORDS[0]}"
-    local commands="generate chat list-models"
+    local commands="generate chat list-models show-config"
     local arguments="-h --help --plain -d --debug"
 
     if [[ $cword -eq 1 ]]; then
