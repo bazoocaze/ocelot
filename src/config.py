@@ -19,30 +19,27 @@ class ConfigLoader:
         except requests.RequestException:
             return False
 
-    def _get_default_providers(self) -> dict:
-        providers = {}
-
-        self._populate_ollama(providers)
-        self._populate_openrouter(providers)
-        self._populate_gemini(providers)
-
-        return providers
-
-    def _populate_openrouter(self, providers):
+    def _populate_openrouter(self, config):
         openrouter_key = os.getenv("OPENROUTER_API_KEY")
         if openrouter_key:
-            providers["openrouter"] = {
+            config["providers"]["openrouter"] = {
                 "type": "openrouter",
                 "api_key": openrouter_key
             }
+        else:
+            config.setdefault("not-found", {})[
+                "openrouter"] = "OpenRouter API key not set (env var OPENROUTER_API_KEY)."
 
-    def _populate_ollama(self, providers):
+    def _populate_ollama(self, config):
         endpoint = OLLAMA_DEFAULT_ENDPOINT
         if self._ollama_is_running(endpoint):
-            providers["ollama"] = {
+            config["providers"]["ollama"] = {
                 "type": "ollama",
                 "base_url": endpoint
             }
+        else:
+            config.setdefault("not-found", {})[
+                "ollama"] = f"Ollama not running/detected on {OLLAMA_DEFAULT_ENDPOINT}."
 
     def load_config(self) -> dict:
         path = self._get_config_path(APP_NAME, CONFIG_FILENAME)
@@ -50,12 +47,22 @@ class ConfigLoader:
             with path.open() as f:
                 return yaml.safe_load(f)
         else:
-            return {"providers": self._get_default_providers()}
+            config = {"providers": {}}
+            self._populate_config(config)
+            return config
 
-    def _populate_gemini(self, providers):
+    def _populate_gemini(self, config):
         gemini_key = os.getenv("GEMINI_API_KEY")
         if gemini_key:
-            providers["gemini"] = {
+            config["providers"]["gemini"] = {
                 "type": "gemini",
                 "api_key": gemini_key
             }
+        else:
+            config.setdefault("not-found", {})[
+                "gemini"] = "Gemini API key not set (env var GEMINI_API_KEY)."
+
+    def _populate_config(self, config):
+        self._populate_ollama(config)
+        self._populate_openrouter(config)
+        self._populate_gemini(config)
