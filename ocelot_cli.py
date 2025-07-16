@@ -83,7 +83,6 @@ def command_chat(config, args):
                 response = chat_session.ask(processed_input, stream=True)
 
                 console.print(f"Assistant: ", style="bright_blue", end="")
-                print(f"[show_reasoning={chat_commands.show_reasoning}, plain={chat_commands.plain}]")
                 token_output = TokenOutput(show_reasoning=chat_commands.show_reasoning, debug=chat_commands.debug,
                                            plain=chat_commands.plain)
                 token_output.output_tokens(response)

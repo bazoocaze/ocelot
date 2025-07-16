@@ -3,6 +3,7 @@ from typing import List
 from rich.console import Console
 
 from src.base_llm_backend import BaseLLMBackend
+from src.gemini_backend import GeminiBackend
 from src.ollama_backend import OllamaBackend
 from src.openai_compatible_backend import OpenAiCompatibleApiBackend
 from src.openrouter_backend import OpenRouterBackend
@@ -13,6 +14,7 @@ BACKEND_CLASSES = {
     "ollama": OllamaBackend,
     "openrouter": OpenRouterBackend,
     "openai": OpenAiCompatibleApiBackend,
+    "gemini": GeminiBackend,
 }
 
 
@@ -43,7 +45,8 @@ class ProviderFactory:
         provider_type = provider_cfg["type"]
 
         if provider_type not in BACKEND_CLASSES:
-            raise ValueError(f"Provider type '{provider_type}' not supported. Available: {BACKEND_CLASSES.keys()}")
+            raise ValueError(
+                f"Provider type '{provider_type}' not supported. Available: {list(BACKEND_CLASSES.keys())}")
 
         cls = BACKEND_CLASSES[provider_type]
 

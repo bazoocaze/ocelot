@@ -22,13 +22,13 @@ class ConfigLoader:
     def _get_default_providers(self) -> dict:
         providers = {}
 
-        endpoint = OLLAMA_DEFAULT_ENDPOINT
-        if self._ollama_is_running(endpoint):
-            providers["ollama"] = {
-                "type": "ollama",
-                "base_url": endpoint
-            }
+        self._populate_ollama(providers)
+        self._populate_openrouter(providers)
+        self._populate_gemini(providers)
 
+        return providers
+
+    def _populate_openrouter(self, providers):
         openrouter_key = os.getenv("OPENROUTER_API_KEY")
         if openrouter_key:
             providers["openrouter"] = {
@@ -36,7 +36,13 @@ class ConfigLoader:
                 "api_key": openrouter_key
             }
 
-        return providers
+    def _populate_ollama(self, providers):
+        endpoint = OLLAMA_DEFAULT_ENDPOINT
+        if self._ollama_is_running(endpoint):
+            providers["ollama"] = {
+                "type": "ollama",
+                "base_url": endpoint
+            }
 
     def load_config(self) -> dict:
         path = self._get_config_path(APP_NAME, CONFIG_FILENAME)
@@ -45,3 +51,11 @@ class ConfigLoader:
                 return yaml.safe_load(f)
         else:
             return {"providers": self._get_default_providers()}
+
+    def _populate_gemini(self, providers):
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if gemini_key:
+            providers["gemini"] = {
+                "type": "gemini",
+                "api_key": gemini_key
+            }

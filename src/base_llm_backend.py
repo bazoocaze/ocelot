@@ -1,9 +1,13 @@
+from abc import abstractmethod, ABC
 from typing import List, Dict, Union, Generator
 
-class BaseLLMBackend:
+
+class BaseLLMBackend(ABC):
+    @abstractmethod
     def generate(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
         raise NotImplementedError
 
+    @abstractmethod
     def chat(self, messages: List[Dict[str, str]], stream: bool = False) -> Union[str, Generator[str, None, None]]:
         raise NotImplementedError
 
